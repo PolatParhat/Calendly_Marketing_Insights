@@ -1,0 +1,151 @@
+# Plain-text copy of Calendly_Marketing_Insights.docx.pdf (extracted 2026-11-14 with pypdf)
+# The two architecture diagrams on page 6 are saved as:
+#   architecture_option_A_emr_delta_lake.jpg   (Calendly -> Webhook -> Delta Lake + Amazon EMR -> Data Warehouse -> Visualisation)
+#   architecture_option_B_databricks.jpg       (Calendly -> Webhook -> Databricks -> Data Warehouse -> Visualisation)
+# PDF line breaks split some URLs; the exact values are repeated cleanly here:
+#   Organization URL : https://api.calendly.com/organizations/8910725e-6409-44dc-ba57-ead6dd48b052
+#   facebook_paid_ads: https://api.calendly.com/event_types/79652b8a-1688-4d0b-ba8f-733c70856de4
+#   youtube_paid_ads : https://api.calendly.com/event_types/2b5580c2-13e9-4283-8b4d-56401cf31554
+#   tiktok_paid_ads  : https://api.calendly.com/event_types/70022cde-e64f-49a0-9362-a815186005dc
+#   Spend file       : https://dea-data-bucket.s3.us-east-1.amazonaws.com/calendly_spend_data/spend_data_YYYY-MM-DD.json
+#   Spend file index : https://dea-data-bucket.s3.us-east-1.amazonaws.com/calendly_spend_data/file_index.json
+
+=== Page 1 ===
+Project Overview 
+● Objective: Build a Data Engineering pipeline for an organization and create business insights using the marketing & calendly data. 
+● Background: We as an organization want to understand the marketing efforts and the leads generated per marketing campaign. This will help us manage our marketing spends and will give us more insights around the conversion rate of each campaign. We will also get a better understanding about the meetings scheduled and will pose a better calendar optimization road map. Step-by-Step Plan 
+
+Step 1: Source Data Explanation: 1. Task: 
+● Go to Calendly - Developer Website 
+● On the left side pane, under Resources find different types of datasets in json format namely scheduled events & webhooks . 
+● Each section will have a specific input parameter for requests and an output json. 
+● Marketing data will be received using webhooks that will have event related information which are getting newly created. 
+
+Step 2: Initial Data Analysis 1. Task: 
+○ Analyze the json datasets of webhooks and determine the input needed.( Manually ) 
+○ Identify the json data elements to determine the table structure needed for designing your Bronze, Silver & Gold layer of calendly data.( Manually )
+
+=== Page 2 ===
+○ Data Hierarchy and Identification Process: 
+● API with POST method: You need to send the API URL to SME(Avirup/Azmat/Ninad/Kareem) for Webhook creation. Hint : Use AWS services Organization_URL - https://api.calendly.com/organizations/8910725e-6409-44dc-ba57-ead6dd4 8b052 
+● Sample Incoming Webhook Events : Webhook JSON for invitee.created : {"created_at":"2025-07-09T06:04:34.000000Z","created_by":"https://api.cal endly.com/users/8ec9d4df-39c5-463a-8b40-bcb5d0a70edf","event":"invitee .created","payload":{"cancel_url":"https://calendly.com/cancellations/22a0f2 d6-1bde-4fc1-95c1-d969df1da21d","created_at":"2025-07-09T06:04:33.76 1871Z","email":"chrisgarzon19@gmail.com","event":"https://api.calendly.co m/scheduled_events/1ac9e88e-eae3-4e4b-b979-d770cff02d72","first_nam e":null,"invitee_scheduled_by":"https://api.calendly.com/users/8ec9d4df-39 c5-463a-8b40-bcb5d0a70edf","last_name":null,"name":"Ninad Magdum","new_invitee":null,"no_show":null,"old_invitee":null,"payment":nul l,"questions_and_answers":[{"answer":"+91 91303 02575","position":0,"question":"What is your phone number?"}],"reconfirmation":null,"reschedule_url":"https://calendly.com/resc hedulings/22a0f2d6-1bde-4fc1-95c1-d969df1da21d","rescheduled":false,"r outing_form_submission":null,"scheduled_event":{"created_at":"2025-07-09 T06:04:33.743275Z","end_time":"2025-07-09T18:00:00.000000Z","event_g uests":[],"event_memberships":[{"user":"https://api.calendly.com/users/76e8 f2b2-b38c-41c8-826f-4b61f2ba22ba","user_email":"zan@dataengineeraca demy.com","user_name":"Zan Strmec"}],"event_type":"https://api.calendly.com/event_types/d639ecd3-871 8-4068-955a-436b10d72c78","invitees_counter":{"total":1,"active":1,"limit":1 },"location":{"location":null,"type":"custom"},"meeting_notes_html":null,"mee ting_notes_plain":null,"name":"Data Engineer Academy Info Session","start_time":"2025-07-09T17:45:00.000000Z","status":"active","up dated_at":"2025-07-09T06:04:33.743275Z","uri":"https://api.calendly.com/s cheduled_events/1ac9e88e-eae3-4e4b-b979-d770cff02d72"},"scheduling_ method":null,"status":"active","text_reminder_number":null,"timezone":"Asia /Calcutta","tracking":{"utm_campaign":null,"utm_source":null,"utm_medium" :null,"utm_content":null,"utm_term":null,"salesforce_uuid":null},"updated_at" :"2025-07-09T06:04:33.761871Z","uri":"https://api.calendly.com/scheduled_
+
+=== Page 3 ===
+events/1ac9e88e-eae3-4e4b-b979-d770cff02d72/invitees/22a0f2d6-1bde-4 fc1-95c1-d969df1da21d"}} Example Flow: One Invitee Created 1. Webhook received with: 
+○ event_type : This will help you identify the marketing campaigns events. Use the below provided event_types to filter on the received data which involves the entire organization’s data. 2. You fetch: 
+○ Event name : The event name will help you identify the marketing events from the pool of all events. 3. You extract: 
+○ Webhook invite.created data - Flatten the new events data in json format using webhook and prepare a table to join with the marketing data based on date . Support Data: Below are the event_types for all three campaigns a. facebook_paid_ads- https://api.calendly.com/event_types/79652b8a-1688-4d0b-ba8f-733c7085 6de4 b. youtube_paid_ads- https://api.calendly.com/event_types/2b5580c2-13e9-4283-8b4d-56401cf3 1554 c. tiktok_paid_ads- https://api.calendly.com/event_types/70022cde-e64f-49a0-9362-a8151860 05dc 
+● Total Spends per Channel/Campaign[Data]: You will receive data for total spends to produce the dashboard ‘ Cost Per Booking (CPB) by Channel’ . Data will be present in a public S3 bucket at 06:00 AM EST Daily for Day-1 spends . Data in the file ranges for a time period of 30 days at maximum. You can access the files dynamically with your ingestion logic by using this - https://dea-data-bucket.s3.us-east-1.amazonaws.com/calendly_ spend_data/spend_data_YYYY-MM-DD.json where YYYY-MM-DD[Day-1] changes daily.
+
+=== Page 4 ===
+Also you can use this file - https://dea-data-bucket.s3.us-east-1.amazonaws.com/calendly_ spend_data/file_index.json to read the file names and use it as per availability. Data will be in json format & in USD currency which needs to be extracted into a table for your use. Sample Data: [ { "date": "2025-06-24", "channel": "facebook_paid_ads", "spend": 653.28 }, { "date": "2025-06-24", "channel": "youtube_paid_ads", "spend": 487.59 }, { "date": "2025-06-24", "channel": "tiktok_paid_ads", "spend": 345.12 } ] 
+
+Step 3: Define Data Engineering Pipeline/Architecture 1. Task:
+
+=== Page 5 ===
+○ Design a production level pipeline which can extract data, store the data, perform transformations and provide business insights using visualization. 
+○ The pipeline should include scheduling, encryption, and failure reload mechanism. 
+○ Design an architecture based on below requirements: The entire architecture should be designed using AWS resources . Use the below architecture's design to complete the entire pipeline based on the key sections shown. Choose any one
+
+=== Page 6 ===
+( Lambda Architecture ) 
+● Present the architecture and data model for Business approval(Ninad/Azmat/Kareem/Avirup). 
+● MAKE SURE TO STORE DATA IN DELTA LAKE ON TOP OF AWS S3 
+● Move head once clearance from the SME Deliverable: 
+○ Pipeline architecture diagram completing each high level section in Lambda diagram(given) and explanation. 
+○ Create a solution design document. 
+○ Written approval from the SME.
+
+=== Page 7 ===
+○ Use tools like draw.io, miro, etc for diagrams. 
+
+Step 4: Build the Data Pipeline Define and Calculate Metrics as per Business Requirement: Metrics 1.1 Daily Calls Booked by Source 
+● Goal: Count of Calendly bookings per source, per day 1.2 Analyze Cost Per Booking(CPB) by Channel 
+● Goal : Determine how much it costs to acquire a lead in each marketing channel. 
+● Why it matters : Identifies the most cost-efficient acquisition channels. 
+● How to do it : 
+○ Formula: Cost per Lead = Total Spend / Total Booked CAlls 
+○ Group by channel, then compute cost per lead. 1.3 Bookings Trend Over Time 
+● Goal : Track daily or weekly volume of Calendly bookings per source. 
+● Why it matters : Spot trends like campaign fatigue, seasonal changes, or the impact of new creatives. 
+● How : Group bookings by booking_date and source, then plot counts over time (line chart). 1.4 Channel Attribution 
+● Goal : Attribute bookings to specific marketing channels or campaigns using UTM parameters. 
+● Why it matters : Identifies which sources (Google, Facebook, YouTube, etc.) and campaigns generate the most and cheapest calls. 
+● How : Group bookings by source, and calculate: 
+○ total bookings 
+○ total spend 
+○ CPB Then sort and visualize in a leaderboard or heatmap. 1.5 Booking Volume by Time Slot / Day of Week 
+● Goal : Understand when leads prefer booking calls.
+
+=== Page 8 ===
+● Why it matters : Helps with resource planning (e.g., setter/closer availability) and scheduling ad delivery (e.g., increasing bids near high-volume slots). 
+● How : Extract hour and day_of_week from Calendly booking timestamps and plot heatmaps or histograms grouped by time and channel. 1.6 Understand Meeting Load per Employee 
+● Goal : Calculate how many meetings each employee attends weekly. 
+● Why it matters : Identifies potential burnout or over-scheduling. 
+● How to do it: 
+○ Formula: Avg Meetings per Week = Total Meetings / Number of Weeks 
+○ Group by employee_id 
+
+Step 5: Build the Dashboard using Streamlit: Please go through this link for working on Streamlit for Visualization: Streamlit Tutorial 1. Task: Design an interactive dashboard showcasing the calculated metrics and insights. Deliverable: 1.1 Daily Calls Booked by Source 
+● Goal : Count of Calendly bookings per source per day. 
+● Why it matters: Monitors daily performance and compares lead generation efforts across channe ls. 
+● Visualizations : 
+○ Line chart: Date vs Number of Bookings, color-coded by source 
+○ Optional: Daily comparison table by source 
+● Data Requirements: 
+○ booking_date, source, booking_id 1.2 Cost Per Booking (CPB) by Channel 
+● Goal : Calculate average cost per booking per channel. 
+● Why it matters : Reveals the most cost-effective channels for acquiring leads. 
+● Formula : CPB = Total Spend / Total Booked Calls 
+● Visualizations: 
+○ Bar chart: Channel vs CPB 
+○ KPI Tiles: Total Bookings, Total Spend, Average CPB
+
+=== Page 9 ===
+○ Table with sorting: Channel, Spend, Bookings, CPB 
+● Data Requirements : 
+○ channel, spend, booking_id 1.3 Bookings Trend Over Time 
+● Goal : Track daily/weekly booking volume by source. 
+● Why it matters : Helps identify dips, surges, or patterns due to campaigns, seasonality, or other factors. 
+● Visualizations : Line chart: Date vs Number of Bookings by source 
+○ Area chart: Cumulative Bookings 
+● Data Requirements : 
+○ booking_date, source, booking_id 1.4 Channel Attribution (CPB & Volume Leaderboard) 
+● Goal : Attribute bookings to channels using UTM parameters and rank by volume and cost. 
+● Why it matters: Allows precise ROI tracking by source. 
+● Visualizations : 
+○ Leaderboard table: Source | Total Bookings | Spend | CPB 
+○ Heatmap: CPB by Channel and Campaign 
+○ Bar chart: Top-performing sources by bookings 
+● Data Requirements: 
+○ source, campaign, booking_id, spend 1.5 Booking Volume by Time Slot / Day of Week 
+● Goal : Determine booking activity patterns across time slots and weekdays. 
+● Why it matters : Informs ad scheduling and team resource planning. 
+● Visualizations : 
+○ Heatmap: Hour of Day vs Day of Week (intensity = bookings) 
+○ Histogram: Bookings by Hour 
+○ Pie chart: Bookings by Day of Week 
+● Data Requirements : 
+○ booking_timestamp, source, booking_id 1.6 Understand Meeting Load per Employee 
+● Goal : Show how many meetings each employee attends per week. 
+● Why it matters : Helps track workload and prevent scheduling overload.
+
+=== Page 10 ===
+● Formula : Avg Meetings per Week = Total Meetings / Number of Weeks 
+● Visualizations : 
+○ Bar chart: Employee vs Avg Meetings/Week 
+○ KPI: Total Meetings, Max Meetings, Min Meetings 
+○ Optional line chart: weekly trend per employee 
+● Data Requirements : 
+○ employee_id, meeting_id, meeting_date 
+
+Step 6: Submission and Review 1. Task: 
+○ Submit all deliverables, including: 
+■ Pipeline documentation. 
+■ Code files (ETL scripts). 
+■ Setup Configurations (if any) 
+■ Final dashboard. 
+■ Create a CI/CD pipeline using github. 2. Instructions: 
+○ Ensure all files are properly named and documented. 
+○ Include a short video or presentation explaining the work . 
+○ Explain ‘WHY ’ behind each tech stack used in your design
