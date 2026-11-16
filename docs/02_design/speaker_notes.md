@@ -58,8 +58,9 @@ channel and campaign attribution, booking volume by hour and weekday, and meetin
 - No cancellation tracking and no backfill: data starts when the webhook goes live.
 - And Athena is the data warehouse.
 
-For meeting load, I've decided to count only meetings from the three marketing channels.
-I'll come back to that at the end."
+Your follow-up answers settled the last two points, and I'll show where they fit later:
+meeting load counts only the three marketing channels, by the week of the meeting,
+and cost per booking is calculated per channel."
 
 ## 4. Architecture: follow one booking (2:30–5:00)
 
@@ -163,20 +164,20 @@ For example: on day one, 100 dollars and 10 bookings is 10 dollars each.
 On day two, 100 dollars and 1 booking is 100 dollars.
 Averaging those gives 55 dollars, which is wrong. The real cost is 200 dollars for 11 bookings: about 18 dollars."
 
-## 7. Points I need you to confirm (8:45–9:30)
+## 7. The two points you confirmed (8:45–9:30)
 
-[Show] Tab 3 or Tab 4, whichever you're on.
+[Show] Tab 4, `data_model.png`, point at the Gold tables 1.6 and 1.4.
 
-"There are two small points I'd like you to confirm. I've also sent them by email.
+"Two points from your follow-up answers are now in the design.
 
-First, meeting load. I count only meetings from the three marketing channels.
-Should a meeting count in the week it **takes place**, or the week it was **booked**?
-I suggest the week it takes place, because the metric is about meetings employees actually attend.
+First, meeting load. It counts only meetings from the three marketing channels,
+and each meeting counts in the week it takes place, using its start time.
+Average meetings per week is then total meetings divided by the number of weeks in the period.
 
 Second, the 'cost per booking by channel and campaign' heatmap.
-The spend files only have spend per channel, not per campaign, so a true cost per campaign can't be calculated.
-I suggest the heatmap shows the number of bookings per channel and campaign,
-and cost per booking stays at channel level."
+The spend files only have spend per channel, not per campaign.
+So, as you agreed, the heatmap shows the number of bookings per channel and campaign,
+and cost per booking is calculated at channel level."
 
 ## 8. Next steps and close (9:30–10:00)
 
@@ -188,7 +189,7 @@ the Spark job on EMR, scheduling and alerts, Athena, and finally the dashboard.
 
 The first thing you'll get from me is the webhook URL, so you can create the webhook and share the signing key.
 
-What I need from you: approval of the architecture and data model, and your answer on those two points.
+What I need from you: written approval of the architecture and data model.
 Thank you for watching."
 
 ---

@@ -25,6 +25,8 @@
 | 2026-11-16 | Meeting load (1.6) counts **only the 3 marketing channels**; Silver therefore holds marketing bookings only, non-marketing events stay in Bronze | User decision (SME left it open); also keeps less PII |
 | 2026-11-16 | Plan order changed: Step 2 (design + SME approval) before Step 1 (repo skeleton) | User: present the design to the SME before building anything |
 | 2026-11-16 | Failed webhook writes go to an **SQS retry queue** that the daily Step Functions run replays first (refines the earlier "SQS DLQ"); data-quality checks in the Spark job stop the run and alert | Lambda's built-in DLQ only covers async calls, and API Gateway calls Lambda synchronously, so the Lambda sends failed events to the queue itself |
+| 2026-11-16 | **SME-confirmed**: meeting load (1.6) = marketing event types only, counted per week of meeting `start_time` | SME follow-up reply 2026-11-16 |
+| 2026-11-16 | **SME-confirmed**: metric 1.4 heatmap shows bookings by channel × campaign; CPB only at channel level (spend has no campaign) | SME follow-up reply 2026-11-16 |
 
 ## Change log
 - 2026-11-14: Project scaffold created; requirements PDF moved to docs/00_requirements/ with text copy and diagrams.
@@ -32,3 +34,4 @@
 - 2026-11-16: Private GitHub repo created (PolatParhat/Calendly_Marketing_Insights); PR #1 (decisions + plan) and PR #2 (plan + architecture in README) merged; SME questions saved to docs/01_sme/sme_questions.md.
 - 2026-11-16: SME answered 9 of 10 questions (time slot changed to meeting start_time); architecture diagram drawn (docs/02_design/architecture.drawio + .png).
 - 2026-11-16: Data model, follow-up SME questions and solution design drafted (docs/02_design/).
+- 2026-11-16: SME answered both follow-up questions (meeting-load week = start_time; heatmap = bookings, CPB per channel). Design PR #4 merged.

@@ -161,10 +161,9 @@ Dashboard formulas on top of Gold:
 
 ---
 
-## Open points for the design review
-1. **Meeting-load week (1.6):** scope is decided (3 marketing channels only). Proposal: a meeting counts
-   in the week it **takes place** (`start_time`), since the metric measures meetings attended.
-2. **"CPB by Channel and Campaign" heatmap (1.4):** spend files only have `channel`, not campaign, so
-   spend cannot be split by campaign. Proposal: the heatmap shows **bookings** by channel × campaign,
-   and CPB stays at channel level. Alternative: split each channel's spend across its campaigns in
-   proportion to bookings (an estimate, labelled as such).
+## Resolved points (SME-confirmed 2026-11-16)
+1. **Meeting load (1.6):** only the 3 marketing event types; a meeting counts in the week of its
+   `start_time` (US Eastern, Monday–Sunday).
+2. **"CPB by Channel and Campaign" heatmap (1.4):** spend exists per channel only, so the heatmap shows
+   **bookings** by channel × campaign, and CPB is calculated at channel level only (no estimated
+   per-campaign CPB).

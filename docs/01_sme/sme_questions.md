@@ -79,7 +79,7 @@ Received 2026-11-16. SME reply (verbatim):
 
 # Follow-up questions (drafted 2026-11-16)
 
-Status: drafted; user to send. Record the answers under "Follow-up answers" below.
+Status: sent; answered 2026-11-16 (see "Follow-up answers").
 
 ---
 
@@ -119,4 +119,13 @@ Polat
 ---
 
 ## Follow-up answers
-_(none yet)_
+Received 2026-11-16. SME reply (verbatim):
+
+> yes you can use start_time to calculate Meeting Load per Employee by week and include only the three marketing event types.
+> For CPB go with option A since the spend data is available only at the channel level. You can show bookings by channel
+> and campaign, and calculate CPB separately at the channel level. This approach is fine.
+
+| # | Question | Answer | vs. our plan |
+|---|----------|--------|--------------|
+| 1 | Meeting load (1.6): which week, and which meetings | Week of the meeting `start_time`; only the 3 marketing event types | same |
+| 2 | "CPB by Channel and Campaign" heatmap | Option a): heatmap shows bookings by channel × campaign; CPB at channel level only | same |
