@@ -73,7 +73,7 @@
         <mxCell id="bronze" value="&lt;b&gt;BRONZE&lt;/b&gt;&lt;br&gt;&lt;br&gt;raw rows, all events,&lt;br&gt;nothing dropped&lt;br&gt;&lt;br&gt;bookings_raw&lt;br&gt;spend_raw" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8C9A5;strokeColor=#A0522D;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
           <mxGeometry x="697" y="310" width="118" height="200" as="geometry" />
         </mxCell>
-        <mxCell id="silver" value="&lt;b&gt;SILVER&lt;/b&gt;&lt;br&gt;&lt;br&gt;flattened, typed,&lt;br&gt;de-duplicated,&lt;br&gt;3 marketing channels&lt;br&gt;&lt;br&gt;bookings&lt;br&gt;spend_daily" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3E3E3;strokeColor=#808080;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+        <mxCell id="silver" value="&lt;b&gt;SILVER&lt;/b&gt;&lt;br&gt;&lt;br&gt;flattened, typed,&lt;br&gt;de-duplicated,&lt;br&gt;3 marketing channels&lt;br&gt;&lt;br&gt;bookings&lt;br&gt;booking_hosts&lt;br&gt;spend_daily" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3E3E3;strokeColor=#808080;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
           <mxGeometry x="826" y="310" width="118" height="200" as="geometry" />
         </mxCell>
         <mxCell id="gold" value="&lt;b&gt;GOLD&lt;/b&gt;&lt;br&gt;&lt;br&gt;business tables&lt;br&gt;for the 6 metrics&lt;br&gt;&lt;br&gt;daily_bookings&lt;br&gt;cpb_by_channel&lt;br&gt;bookings_by_hour&lt;br&gt;meeting_load&lt;br&gt;..." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE599;strokeColor=#BF9000;fontSize=12;verticalAlign=top;" vertex="1" parent="1">

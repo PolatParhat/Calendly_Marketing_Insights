@@ -22,7 +22,7 @@
 | 2026-11-16 | **SME-confirmed**: booking date = `payload.created_at`; reporting time zone = US Eastern; channel = from the 3 event_types; campaign = `utm_campaign` else "Unknown"; no cancellation tracking (`invitee.created` only); no backfill | SME reply 2026-11-16 (docs/01_sme/sme_questions.md) |
 | 2026-11-16 | **SME-confirmed, changed**: metric 1.5 time slot = meeting `scheduled_event.start_time` (US Eastern), not the booking moment | SME reply 2026-11-16 |
 | 2026-11-16 | **SME-confirmed**: Athena + Glue Data Catalog over Gold is the data warehouse (no Redshift) | SME reply 2026-11-16 |
-| 2026-11-16 | Still an assumption: meeting load (1.6) counts all meetings the webhook delivers, not just the 3 marketing channels | SME did not answer; confirm at the design review |
+| 2026-11-16 | Meeting load (1.6) counts **only the 3 marketing channels**; Silver therefore holds marketing bookings only, non-marketing events stay in Bronze | User decision (SME left it open); also keeps less PII |
 | 2026-11-16 | Plan order changed: Step 2 (design + SME approval) before Step 1 (repo skeleton) | User: present the design to the SME before building anything |
 
 ## Change log

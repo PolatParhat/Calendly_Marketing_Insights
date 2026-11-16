@@ -69,7 +69,7 @@ Received 2026-11-16. SME reply (verbatim):
 | 4 | Time zone | US Eastern | same |
 | 5 | Channel / campaign | Channel = event type; campaign = `utm_campaign`, else "Unknown" | same (spelling: "Unknown") |
 | 6 | Time slot (metric 1.5) | Meeting `start_time` | **changed** (we assumed booking moment) |
-| 7 | Meeting-load scope (metric 1.6) | _not answered_ | keep assumption (all meetings); confirm at the design review |
+| 7 | Meeting-load scope (metric 1.6) | _not answered_; user decided 2026-11-16: 3 marketing channels only | **changed** (we assumed all meetings) |
 | 8 | Cancellations | Not required | same (`invitee.created` only) |
 | 9 | Historical backfill | Not required | same |
 | 10 | Data warehouse | Athena over Gold Delta tables is fine | same |
