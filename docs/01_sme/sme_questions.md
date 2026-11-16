@@ -1,6 +1,6 @@
 # SME questions (drafted 2026-11-16)
 
-Status: drafted; user to send. Record the SME's answers under "Answers" below when they arrive,
+Status: sent; answered 2026-11-16 (see Answers). Originally: drafted; user to send. Record the SME's answers under "Answers" below when they arrive,
 then update the working assumptions in docs/decisions.md.
 
 ---
@@ -54,4 +54,69 @@ Polat
 ---
 
 ## Answers
+Received 2026-11-16. SME reply (verbatim):
+
+> Please share your webhook URL and we can provide the signing key. You can make test bookings for all three channels.
+> Use created_at for booking metrics, US Eastern time for reporting, and the event type to identify the channel.
+> For campaigns use utm_campaign when available otherwise use Unknown. For booking time slots use the meeting start_time.
+> Cancellation tracking and historical backfill are not required. Athena is fine for querying Gold Delta tables on S3.
+
+| # | Question | Answer | vs. our assumption |
+|---|----------|--------|--------------------|
+| 1 | Signing key | Yes, after we send the webhook URL | same |
+| 2 | Test bookings | Yes, on all three channels | same |
+| 3 | Booking date | `created_at` | same |
+| 4 | Time zone | US Eastern | same |
+| 5 | Channel / campaign | Channel = event type; campaign = `utm_campaign`, else "Unknown" | same (spelling: "Unknown") |
+| 6 | Time slot (metric 1.5) | Meeting `start_time` | **changed** (we assumed booking moment) |
+| 7 | Meeting-load scope (metric 1.6) | _not answered_; user decided 2026-11-16: 3 marketing channels only | **changed** (we assumed all meetings) |
+| 8 | Cancellations | Not required | same (`invitee.created` only) |
+| 9 | Historical backfill | Not required | same |
+| 10 | Data warehouse | Athena over Gold Delta tables is fine | same |
+
+
+---
+
+# Follow-up questions (drafted 2026-11-16)
+
+Status: drafted; user to send. Record the answers under "Follow-up answers" below.
+
+---
+
+**Subject: Calendly Marketing Insights: two follow-up questions**
+
+Hi,
+
+Thank you for the quick answers, they settled almost everything. While designing the data model, two
+points came up where I'd like your confirmation. As before, I've included what I plan to do, so an "OK"
+or a correction is all I need.
+
+**1. Meeting Load per Employee: which week does a meeting count in?**
+The formula is Avg Meetings per Week = Total Meetings / Number of Weeks. A meeting can be booked in one
+week and held in the next. Should it count in the week it was **booked** (`created_at`) or the week it
+**takes place** (`start_time`)?
+*Plan: the week it takes place, since the metric measures the meetings employees actually attend.*
+
+For your information: I'll count only meetings from the three marketing event types (Facebook, YouTube,
+TikTok), so the metric shows the load created by paid marketing. Please let me know if you'd rather
+include all meetings in the organization.
+
+**2. "CPB by Channel and Campaign" heatmap**
+The spend files give spend per **channel** only, with no campaign column, so the true cost per booking
+can't be calculated for each campaign. Which would you prefer?
+- **a)** The heatmap shows **number of bookings** by channel × campaign, and CPB is shown per channel only.
+- **b)** Each channel's spend is split across its campaigns in proportion to their bookings, giving an
+  **estimated** CPB per campaign (clearly labelled as an estimate).
+
+*Plan: option a), because every number on it is exact.*
+
+Once these are confirmed, I'll send the architecture diagram, data model and solution design for your
+written approval.
+
+Best regards,
+Polat
+
+---
+
+## Follow-up answers
 _(none yet)_
