@@ -42,7 +42,21 @@ STATUS.md               where we are now
 - Mac M4 (arm64): build Docker images / Lambda packages for the right architecture.
 
 ## Plan
-| Step | What | Status |
-|------|------|--------|
-| 0 | Project scaffold | done |
-| (to be agreed after the requirements walkthrough) | | |
+Architecture decisions: docs/decisions.md (option A, EMR Serverless, Athena, Step Functions, CDK).
+Steps 4-12 create AWS resources: only after written SME approval (Step 2).
+
+| Step | What | Done when | Status |
+|------|------|-----------|--------|
+| 0 | Project scaffold + requirements walkthrough + decisions | decisions.md filled | done |
+| 1 | Repo and skeleton: GitHub repo, src/ tests/ infra/, venv, CI runs tests | PR shows green check | next |
+| 2 | Design + SME approval: draw.io diagram, Bronze/Silver/Gold data model, solution design doc | written SME approval in docs/ | |
+| 3 | Transformations locally: PySpark + Delta, landing→Bronze→Silver→Gold, 6 metrics | pytest passes; Gold = hand calc | |
+| 4 | AWS foundation (CDK): KMS key, encrypted S3, IAM roles, SNS alert | buckets show SSE-KMS | |
+| 5 | Webhook receiver: API Gateway + Lambda (signature) + Secrets Manager + SQS DLQ; URL to SME | POST lands file in landing/ | |
+| 6 | Spend ingestion Lambda (copies all files in file_index.json) | 30 files; re-run = no dupes | |
+| 7 | Spark job on EMR Serverless on real S3 data | Delta tables in all 3 layers | |
+| 8 | Scheduling + failure reload: EventBridge Scheduler → Step Functions, retries, alerts | forced failure alerts; re-run fixes | |
+| 9 | Warehouse: Glue Data Catalog + Athena over Gold | Athena returns CPB by channel | |
+| 10 | Streamlit dashboard, 6 panels | runs locally on Athena data | |
+| 11 | CI/CD complete: tests, lint, cdk synth on every PR | green checks on a real PR | |
+| 12 | Submission: README, docs, configs, video, "why" per tool | doc's Step 6 list ticked | |
