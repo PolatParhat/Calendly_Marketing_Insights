@@ -2,26 +2,42 @@
 
 **How to use this:** read the **Say** parts out loud. **Show** tells you what to put on screen.
 Each part ends with a **Next** line that leads you into the following part.
-Total: about 12 minutes, then questions.
+Total: about 13 minutes, then questions.
 
 ---
 
-## Part 1. Opening (1 min)
+## Part 1. Introduction (2 min)
 
-**Show:** nothing yet.
+**Show:** nothing yet, just you.
 
 **Say:**
 
-"Thanks for making time today.
+"Hi, thanks for making time today.
 
-Marketing runs ads on Facebook, YouTube and TikTok. People click an ad and book a call in Calendly.
+I'm Polat, and I'm the data engineer building the Calendly Marketing Insights pipeline."
 
-This project answers one simple question: **which channel gets us booked calls for the least money?**
+*(pause)*
 
-To answer it, I bring together two things: every booking, and the daily ad spend.
+"Here's the situation.
+Marketing runs ads on Facebook, YouTube and TikTok.
+People click an ad and book a call in Calendly.
+Right now, nobody can easily see which of those ads actually pays off."
 
-I'll show you how the data flows, how it's stored, and how I keep it safe and reliable.
-At the end, I'll ask for your approval to start building."
+"So this project answers one simple question:
+**which channel gets us booked calls for the least money?**
+
+To answer it, I bring together two things: every booking, and the daily ad spend."
+
+"The purpose of today's meeting is to walk you through my design and get your approval before I build it."
+
+"I'll cover four things:
+1. the big picture: how the data flows,
+2. how the pipeline runs every day and stays safe and reliable,
+3. how the data is organised,
+4. two small open questions.
+
+It takes about ten minutes. Feel free to stop me at any point,
+and I'll leave time for questions at the end."
 
 **Next:** "Let's start with the big picture."
 
