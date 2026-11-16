@@ -1,6 +1,6 @@
 # SME questions (drafted 2026-11-16)
 
-Status: drafted; user to send. Record the SME's answers under "Answers" below when they arrive,
+Status: sent; answered 2026-11-16 (see Answers). Originally: drafted; user to send. Record the SME's answers under "Answers" below when they arrive,
 then update the working assumptions in docs/decisions.md.
 
 ---
@@ -54,4 +54,23 @@ Polat
 ---
 
 ## Answers
-_(none yet)_
+Received 2026-11-16. SME reply (verbatim):
+
+> Please share your webhook URL and we can provide the signing key. You can make test bookings for all three channels.
+> Use created_at for booking metrics, US Eastern time for reporting, and the event type to identify the channel.
+> For campaigns use utm_campaign when available otherwise use Unknown. For booking time slots use the meeting start_time.
+> Cancellation tracking and historical backfill are not required. Athena is fine for querying Gold Delta tables on S3.
+
+| # | Question | Answer | vs. our assumption |
+|---|----------|--------|--------------------|
+| 1 | Signing key | Yes, after we send the webhook URL | same |
+| 2 | Test bookings | Yes, on all three channels | same |
+| 3 | Booking date | `created_at` | same |
+| 4 | Time zone | US Eastern | same |
+| 5 | Channel / campaign | Channel = event type; campaign = `utm_campaign`, else "Unknown" | same (spelling: "Unknown") |
+| 6 | Time slot (metric 1.5) | Meeting `start_time` | **changed** (we assumed booking moment) |
+| 7 | Meeting-load scope (metric 1.6) | _not answered_ | keep assumption (all meetings); confirm at the design review |
+| 8 | Cancellations | Not required | same (`invitee.created` only) |
+| 9 | Historical backfill | Not required | same |
+| 10 | Data warehouse | Athena over Gold Delta tables is fine | same |
+
