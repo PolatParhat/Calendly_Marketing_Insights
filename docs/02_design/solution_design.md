@@ -1,7 +1,7 @@
 # Solution design: Calendly Marketing Insights
 
 Status: draft for SME approval (2026-11-16) · Author: Polat
-Related: [architecture.png](architecture.png) · [data_model.md](data_model.md) ·
+Related: [architecture.png](architecture.png) · [data_model.md](data_model.md) · [data_model.png](data_model.png) ·
 [SME questions and answers](../01_sme/sme_questions.md) · [decision log](../decisions.md)
 
 ## 1. Purpose

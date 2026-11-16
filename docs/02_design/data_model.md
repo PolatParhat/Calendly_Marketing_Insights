@@ -2,6 +2,10 @@
 
 Status: draft for SME review (2026-11-16). Architecture: [architecture.png](architecture.png).
 
+![Data model](data_model.png)
+
+Editable source: [data_model.drawio](data_model.drawio) (open with draw.io).
+
 All tables are **Delta Lake tables on S3**, encrypted with SSE-KMS. One PySpark job on EMR Serverless
 builds them daily. Every write is a Delta `MERGE` keyed on the columns marked **key**, so re-running
 the job after a failure never creates duplicates.
