@@ -19,8 +19,9 @@
 | 2026-11-16 | Meeting load "number of weeks" = **weeks in the selected period** | Matches the doc's formula literally |
 | 2026-11-16 | Duplicate webhook deliveries handled by **MERGE on booking_id** (invitee URI) | Calendly may resend the same event |
 | 2026-11-16 | Channel with spend but 0 bookings → CPB shown as **"no bookings"** | Avoid division by zero |
-| 2026-11-16 | Working assumptions until the SME answers: booking date = `payload.created_at`; time zone = US Eastern; source = channel from the 3 event_types, campaign = `utm_campaign` else "unknown"; time slot = booking moment; meeting load counts all meetings; cancellations still counted; no backfill | Questions sent to SME; revisit when answered |
+| 2026-11-16 | Working assumptions until the SME answers: booking date = `payload.created_at`; time zone = US Eastern; source = channel from the 3 event_types, campaign = `utm_campaign` else "unknown"; time slot = booking moment; meeting load counts all meetings; cancellations still counted; no backfill | Questions drafted in docs/01_sme/sme_questions.md; revisit when answered |
 
 ## Change log
 - 2026-11-14: Project scaffold created; requirements PDF moved to docs/00_requirements/ with text copy and diagrams.
 - 2026-11-16: Requirements walkthrough done (4 parts); architecture and metric decisions recorded; SME question message drafted.
+- 2026-11-16: Private GitHub repo created (PolatParhat/Calendly_Marketing_Insights); PR #1 (decisions + plan) and PR #2 (plan + architecture in README) merged; SME questions saved to docs/01_sme/sme_questions.md.
