@@ -136,11 +136,10 @@ Everything is serverless and pay-per-use: no cluster, database or server runs wh
 processes kilobytes of data, so the expected cost is low (mostly a few minutes of EMR Serverless per day,
 plus KMS and Secrets Manager fixed monthly charges).
 
-## 12. Open points
-Sent to the SME on 2026-11-16 (see [sme_questions.md](../01_sme/sme_questions.md), follow-up):
-1. Meeting load (1.6): count a meeting in the week it takes place (proposed) or the week it was booked.
-2. "CPB by Channel and Campaign" heatmap: bookings per campaign with CPB per channel (proposed), or
-   estimated CPB per campaign.
+## 12. Resolved points
+SME-confirmed 2026-11-16 (see [sme_questions.md](../01_sme/sme_questions.md), follow-up answers):
+1. Meeting load (1.6): only the 3 marketing event types, counted in the week of the meeting `start_time`.
+2. "CPB by Channel and Campaign" heatmap: bookings by channel × campaign; CPB at channel level only.
 
 ## 13. Approval
 | Role | Name | Decision | Date |
