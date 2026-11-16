@@ -74,3 +74,49 @@ Received 2026-11-16. SME reply (verbatim):
 | 9 | Historical backfill | Not required | same |
 | 10 | Data warehouse | Athena over Gold Delta tables is fine | same |
 
+
+---
+
+# Follow-up questions (drafted 2026-11-16)
+
+Status: drafted; user to send. Record the answers under "Follow-up answers" below.
+
+---
+
+**Subject: Calendly Marketing Insights: two follow-up questions**
+
+Hi,
+
+Thank you for the quick answers, they settled almost everything. While designing the data model, two
+points came up where I'd like your confirmation. As before, I've included what I plan to do, so an "OK"
+or a correction is all I need.
+
+**1. Meeting Load per Employee: which week does a meeting count in?**
+The formula is Avg Meetings per Week = Total Meetings / Number of Weeks. A meeting can be booked in one
+week and held in the next. Should it count in the week it was **booked** (`created_at`) or the week it
+**takes place** (`start_time`)?
+*Plan: the week it takes place, since the metric measures the meetings employees actually attend.*
+
+For your information: I'll count only meetings from the three marketing event types (Facebook, YouTube,
+TikTok), so the metric shows the load created by paid marketing. Please let me know if you'd rather
+include all meetings in the organization.
+
+**2. "CPB by Channel and Campaign" heatmap**
+The spend files give spend per **channel** only, with no campaign column, so the true cost per booking
+can't be calculated for each campaign. Which would you prefer?
+- **a)** The heatmap shows **number of bookings** by channel × campaign, and CPB is shown per channel only.
+- **b)** Each channel's spend is split across its campaigns in proportion to their bookings, giving an
+  **estimated** CPB per campaign (clearly labelled as an estimate).
+
+*Plan: option a), because every number on it is exact.*
+
+Once these are confirmed, I'll send the architecture diagram, data model and solution design for your
+written approval.
+
+Best regards,
+Polat
+
+---
+
+## Follow-up answers
+_(none yet)_
