@@ -1,216 +1,211 @@
-# Speaker notes: design review with the SME
+# Speaker notes: design walkthrough video for SME approval
 
-**How to use this:** read the **Say** parts out loud. **Show** tells you what to put on screen.
-Each part ends with a **Next** line that leads you into the following part.
-Total: about 13 minutes, then questions.
+Recording length: about **10 minutes**. Read the lines in quotes in your own words; the **[Show]** lines say what is on screen.
+Facts below come from `docs/02_design/solution_design.md`, `docs/02_design/data_model.md` and `docs/01_sme/sme_questions.md`.
+
+## Before you record
+
+- Merge the design PR first, so everything is on `main`.
+- Open these in browser tabs (GitHub, branch `main`), in this order:
+  1. Repo front page (`README.md`)
+  2. `docs/01_sme/sme_questions.md` (scroll to the **Answers** table)
+  3. `docs/02_design/architecture.png` (open the image, zoom so the whole diagram fills the screen)
+  4. `docs/02_design/data_model.png` (same)
+  5. `docs/02_design/solution_design.md` (section 7, failure reload)
+- **Never show** any `.env` file, AWS console pages with account IDs, or the webhook signing key once you have it.
+- Close Slack/email notifications; set browser zoom so text is readable in the recording.
+- Practice once with a timer; it is fine to read from these notes.
 
 ---
 
-## Part 1. Introduction (2 min)
+## 1. Introduction (0:00–0:40)
 
-**Show:** nothing yet, just you.
+[Show] Tab 1, repo front page.
 
-**Say:**
+"Hi, I'm Polat. This video walks through the design for the Calendly Marketing Insights pipeline.
 
-"Hi, thanks for making time today.
+I'll cover the business problem, how your answers shaped the design, the architecture, how the pipeline stays
+reliable and secure, the data model, and two small points I'd like you to confirm.
 
-I'm Polat, and I'm the data engineer building the Calendly Marketing Insights pipeline."
+Nothing is built yet, on purpose. I'm asking for your approval before I start."
 
-*(pause)*
+## 2. The problem (0:40–1:30)
 
-"Here's the situation.
-Marketing runs ads on Facebook, YouTube and TikTok.
+[Show] Tab 1, scroll to the metrics list in the README.
+
+"Marketing runs paid ads on three channels: Facebook, YouTube and TikTok.
 People click an ad and book a call in Calendly.
-Right now, nobody can easily see which of those ads actually pays off."
 
-"So this project answers one simple question:
-**which channel gets us booked calls for the least money?**
+The question this project answers is simple: **which channel gets us booked calls for the least money?**
 
-To answer it, I bring together two things: every booking, and the daily ad spend."
+To answer it, I bring two sources together.
+The first is every new booking, which Calendly sends us through a webhook.
+The second is the daily ad spend, which is published as JSON files in a public S3 bucket every morning.
 
-"The purpose of today's meeting is to walk you through my design and get your approval before I build it."
+From those, the dashboard shows six metrics: daily calls by channel, cost per booking, the booking trend,
+channel and campaign attribution, booking volume by hour and weekday, and meeting load per employee."
 
-"I'll cover four things:
-1. the big picture: how the data flows,
-2. how the pipeline runs every day and stays safe and reliable,
-3. how the data is organised,
-4. two small open questions.
+## 3. Your answers, built into the design (1:30–2:30)
 
-It takes about ten minutes. Feel free to stop me at any point,
-and I'll leave time for questions at the end."
+[Show] Tab 2, the Answers table.
 
-**Next:** "Let's start with the big picture."
+"Thank you for answering my questions. Every answer is now part of the design:
 
----
+- A booking is dated by when the lead made it, `created_at`.
+- All reports use US Eastern time.
+- The channel comes from the event type, and the campaign from `utm_campaign`, or 'Unknown' when it's empty.
+- Time slots use the meeting's start time. That one changed my original assumption, and the data model now follows it.
+- No cancellation tracking and no backfill: data starts when the webhook goes live.
+- And Athena is the data warehouse.
 
-## Part 2. The big picture: follow one booking (4 min)
+For meeting load, I've decided to count only meetings from the three marketing channels.
+I'll come back to that at the end."
 
-**Show:** architecture.png
+## 4. Architecture: follow one booking (2:30–5:00)
 
-**Say:**
+[Show] Tab 3, `architecture.png`. Point at each box as you say it.
 
-"This diagram has the same five sections as the one in the requirements.
+"This diagram follows option A from the requirements, Delta Lake plus Amazon EMR,
+and keeps the same five sections, so it maps one-to-one to the diagram you gave us.
+
 The easiest way to read it is to follow one booking from left to right."
 
 *(point at Calendly)*
-"**One:** someone books a call. Calendly instantly sends us a message about it. That's the webhook."
+"Someone books a call. Calendly immediately sends a message about it to our web address."
 
-*(point at API Gateway and the Lambda)*
-"**Two:** the message arrives at our web address. A small function checks that it really came from Calendly,
-then saves it in S3, exactly as it arrived."
+*(point at API Gateway and the webhook Lambda)*
+"That address is an API Gateway endpoint. A small Lambda function checks the Calendly signature,
+so we only accept messages that really come from Calendly.
+The signing key is stored in Secrets Manager, never in the code.
+Then the Lambda saves the message in S3, exactly as it arrived."
 
-*(point at EMR and the Bronze, Silver, Gold boxes)*
-"**Three:** once a day, a Spark job cleans the data and stores it in three layers: Bronze, Silver and Gold.
-I'll explain those in a minute."
+*(point at the SQS retry queue)*
+"If that save ever fails, the message goes into a retry queue instead of being lost."
 
-*(point at Athena)*
-"**Four:** Athena lets us query the final tables with plain SQL."
+*(point at Marketing spend and the spend Lambda)*
+"The ad spend takes a shorter route. Every morning, a second Lambda reads the file index
+and copies every spend file into our S3.
+Each file holds the last 30 days, so if one day is ever missed, the next run fills it in."
+
+*(point at EMR Serverless and the Bronze, Silver, Gold boxes)*
+"Once a day, one PySpark job on EMR Serverless turns the raw files into three layers of Delta tables:
+Bronze, Silver and Gold. I'll show those in the data model.
+Serverless means there's no cluster to manage, and nothing running when we're not using it."
+
+*(point at Glue and Athena)*
+"The Glue Data Catalog holds the table definitions, and Athena queries the Gold tables with SQL,
+directly in S3. Nothing is copied."
 
 *(point at Streamlit)*
-"**Five:** the dashboard shows the six metrics."
+"Finally, the Streamlit dashboard shows the six metrics."
 
-*(point at Marketing spend, bottom left)*
-"The ad spend takes a shorter route. Every morning, a second small function copies the spend files into our S3.
-The same daily job picks them up from there."
+## 5. Scheduling, failure reload and security (5:00–7:00)
 
-**Next:** "That's how the data gets in. Now, the three things the requirements ask for: scheduling, failure handling and encryption. They're in the bottom band."
+[Show] Tab 3, bottom band of the diagram.
 
----
-
-## Part 3. Scheduling, safety nets, security (3 min)
-
-**Show:** architecture.png, bottom band.
+"The requirements ask for three things: scheduling, a failure reload mechanism, and encryption.
+This bottom band shows each one."
 
 *(point at Scheduling)*
-**Say:**
-
-"The spend files arrive at 6 AM Eastern.
-At **7 AM**, a scheduler starts the daily run. The extra hour is a safety margin."
+"Scheduling. The spend file is published at 6 AM Eastern.
+At 7 AM, EventBridge Scheduler starts a Step Functions workflow.
+It replays anything waiting in the retry queue, copies the spend files, and runs the Spark job.
+The extra hour is a safety margin, and the schedule follows daylight-saving time automatically."
 
 *(point at Failure reload)*
-"If something breaks, there are three safety nets.
+"Failure reload. There are three safety nets.
+First, every step retries automatically, and if it still fails, I get an email alert.
+Second, nothing is lost: failed bookings wait in the queue, and missed spend days fill in the next day.
+Third, every write is a Delta MERGE, which updates existing rows instead of adding new ones.
+So after fixing a problem, I simply re-run the job, and nothing is ever counted twice."
 
-**First,** every step retries automatically. If it still fails, I get an email.
+[Show] Tab 5, section 7, for a few seconds, then back to Tab 3.
 
-**Second,** if a booking can't be saved, it waits in a queue and gets saved on the next run. Nothing is lost.
-
-**Third,** every run *updates* rows instead of adding new ones.
-So I can always re-run safely. Nothing gets counted twice."
+"Section 7 of the solution design lists each failure case and what happens, if you'd like the detail."
 
 *(point at Security)*
-"All data is encrypted, both when stored and when moving.
-Each service can only touch what it needs.
-Personal details, like names and emails, never reach the dashboard. It only shows totals."
+"Security. All data is encrypted at rest with our own KMS key, and in transit with HTTPS only.
+Each service gets its own IAM role with only the permissions it needs.
+The bookings contain personal data, names, emails and phone numbers,
+so that stays in the Bronze and Silver layers. Gold and the dashboard only show totals."
 
 *(point at CI/CD)*
-"And everything is written as code and tested automatically on GitHub before any change goes live."
+"And everything is defined as code with AWS CDK, and tested automatically by GitHub Actions on every pull request."
 
-**Next:** "Now let's look at how the data is organised."
+## 6. Data model (7:00–8:45)
 
----
+[Show] Tab 4, `data_model.png`.
 
-## Part 4. The data model (3 min)
+"The data moves left to right through the same layers."
 
-**Show:** data_model.png
+*(point at Landing and Bronze)*
+"Bronze keeps the raw data exactly as it arrived, plus which file it came from.
+It's our backup: if anything goes wrong, every layer can be rebuilt from here."
 
-**Say:**
+*(point at silver.bookings)*
+"Silver has one clean row per marketing booking. Only the three marketing event types get this far.
+The webhook message is flattened into proper columns, and duplicates are removed using the booking's unique ID.
+This is where your rules live: the booking date, Eastern time, the campaign, and the meeting hour and weekday."
 
-"Again, read it left to right."
-
-*(point at Bronze)*
-"**Bronze** is the raw data, exactly as it arrived. It's our backup. If anything goes wrong, we rebuild from here."
-
-*(point at Silver)*
-"**Silver** is the clean version. We keep only the three marketing channels,
-turn the raw message into proper columns, and remove duplicates.
-
-This is where your rules live: the booking date, Eastern time, the campaign, and the meeting hour."
-
-*(point at booking_hosts)*
-"One detail: a meeting can have more than one host, so hosts get their own small table.
+*(point at silver.booking_hosts and the many-to-one line)*
+"A meeting can have more than one host, so hosts get their own table, one row per host per booking.
 That's what the meeting-load metric counts."
 
+*(point at silver.spend_daily)*
+"The spend files overlap, so Silver keeps one value per day and channel, from the newest file."
+
 *(point at Gold)*
-"**Gold** has one small table per metric, ready for the dashboard."
+"Gold has one small table per metric, with counts and totals per day.
 
-"One important point about **cost per booking**.
-I always divide total spend by total bookings for the period you choose. I never average daily numbers.
+One important point about cost per booking: the dashboard always divides total spend by total bookings
+for the period you choose. It never averages daily numbers.
+For example: on day one, 100 dollars and 10 bookings is 10 dollars each.
+On day two, 100 dollars and 1 booking is 100 dollars.
+Averaging those gives 55 dollars, which is wrong. The real cost is 200 dollars for 11 bookings: about 18 dollars."
 
-A quick example:
-- Day 1: $100 spent, 10 bookings. That's $10 per booking.
-- Day 2: $100 spent, 1 booking. That's $100 per booking.
-- Averaging the two days gives $55. That's wrong.
-- The real cost is $200 for 11 bookings: about **$18** per booking."
+## 7. Points I need you to confirm (8:45–9:30)
 
-**Next:** "Two small questions are still open."
+[Show] Tab 3 or Tab 4, whichever you're on.
 
----
+"There are two small points I'd like you to confirm. I've also sent them by email.
 
-## Part 5. Open questions and approval (1 min)
+First, meeting load. I count only meetings from the three marketing channels.
+Should a meeting count in the week it **takes place**, or the week it was **booked**?
+I suggest the week it takes place, because the metric is about meetings employees actually attend.
 
-**Show:** nothing, or the end of solution_design.md.
+Second, the 'cost per booking by channel and campaign' heatmap.
+The spend files only have spend per channel, not per campaign, so a true cost per campaign can't be calculated.
+I suggest the heatmap shows the number of bookings per channel and campaign,
+and cost per booking stays at channel level."
 
-**Say:**
+## 8. Next steps and close (9:30–10:00)
 
-"**First, meeting load.** I count only meetings from the three marketing channels.
-Should a meeting count in the week it *happens*, or the week it was *booked*?
-I suggest the week it happens."
+[Show] Tab 1, README build plan.
 
-"**Second, the campaign heatmap.** Spend only comes per channel, not per campaign.
-So I suggest the heatmap shows *bookings* per campaign, and cost per booking stays per channel."
+"If you approve, I'll build in this order: the repo skeleton and CI first,
+then the transformations locally with tests, then the AWS foundation, the webhook receiver, spend ingestion,
+the Spark job on EMR, scheduling and alerts, Athena, and finally the dashboard.
 
-*(write their answers down)*
+The first thing you'll get from me is the webhook URL, so you can create the webhook and share the signing key.
 
-"If you're happy with the design, could you confirm your approval by email?
-Then I'll start building. The first thing you'll get from me is the webhook URL."
-
----
-
-## If they ask...
-
-Short answers first. Add the second sentence only if they want more.
-
-**"Why not Databricks?"**
-The requirements say everything must be on AWS, and Databricks is a separate company.
-EMR Serverless runs the same Spark, and costs nothing when it's not running.
-
-**"Why not Redshift?"**
-You confirmed Athena. It reads the tables where they are, with no copying, and we only pay when we query.
-
-**"How up to date is the dashboard?"**
-It shows everything up to yesterday, updated every morning at 7.
-That matches the spend data, which is also one day behind.
-
-**"What if Calendly sends the same booking twice?"**
-Each booking has a unique ID. A repeat just updates the same row, so it's never counted twice.
-
-**"What if your system is down when someone books?"**
-If saving fails, the booking waits in a queue and is saved the next morning.
-If the whole system is down, I get an alert straight away.
-
-**"What if a spend number gets corrected later?"**
-Every day I re-read all the spend files. The newest number always wins.
-
-**"How do you know the numbers are right?"**
-Automatic tests compare the results with numbers I calculated by hand.
-And I'll make test bookings on all three channels to check the whole flow.
-
-**"How is personal data protected?"**
-It's encrypted, only a few services can read it, and the dashboard only shows totals.
-
-**"What does it cost?"**
-Very little. Nothing runs when it's idle, and the daily job takes only a few minutes.
-
-**"What if we add a fourth channel?"**
-I add one line to a settings list and redeploy. No tables change.
+What I need from you: approval of the architecture and data model, and your answer on those two points.
+Thank you for watching."
 
 ---
 
-## If you lose your place
+## Likely SME questions (prepare, don't read)
 
-The whole design in five lines:
-1. Calendly sends each booking to us instantly. We check it and save it.
-2. Every morning we copy the ad spend files.
-3. At 7 AM a Spark job cleans everything into Bronze, Silver and Gold.
-4. Athena queries Gold; the dashboard shows the six metrics.
-5. Retries, a queue, safe re-runs and encryption keep it reliable and secure.
+| Question | Answer |
+|---|---|
+| Why EMR Serverless and not Databricks? | The requirements say everything must be on AWS; Databricks is a separate vendor. EMR Serverless runs the same Spark with no cluster to manage and no cost while idle. |
+| Why doesn't the webhook Lambda write straight into Delta? | Many bookings can arrive at once, and many Lambdas writing one Delta table at the same time would conflict. Saving raw files is fast and safe; the daily Spark job does all the Delta writes. |
+| How up to date is the dashboard? | Up to the previous day, refreshed every morning at 7. That matches the spend data, which is also one day behind. The schedule is one setting if fresher booking numbers are needed. |
+| What if Calendly sends the same booking twice? | Silver uses the booking's unique ID (`payload.uri`) as its key, so a repeat updates the same row. |
+| What if the endpoint is down when someone books? | If the S3 save fails, the booking goes to the retry queue and is replayed the next morning. If the whole endpoint is down, an alarm emails me straight away. |
+| What if a spend number is corrected later? | Every run re-reads all files in the index; for each day and channel, the newest file wins. |
+| How do you know the numbers are right? | Unit tests compare Gold with hand-calculated values on sample data; data-quality checks run in every job; and test bookings on all three channels check the flow end to end. |
+| How is personal data protected? | Encrypted with our KMS key at rest and HTTPS in transit, least-privilege IAM, PII only in Bronze/Silver, non-marketing bookings never reach Silver, dashboard shows totals only. |
+| What does it cost? | Pay-per-use only; nothing runs while idle. The daily job processes kilobytes: a few minutes of EMR Serverless a day plus small fixed charges for KMS and Secrets Manager. |
+| Why Athena and not Redshift? | You confirmed Athena. It queries Gold in place, with no copy to load or keep in sync, and costs only per query. |
+| What if a fourth channel is added? | The event-type-to-channel mapping is a config list. Adding a channel is one line and a redeploy; no table changes. |
+| Why 7 AM and not 6 AM? | The spend file is published at 6 AM Eastern; the hour is a safety margin. A file later than that is picked up the next day. |
