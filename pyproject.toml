@@ -1,0 +1,13 @@
+[project]
+name = "calendly-insights"
+version = "0.1.0"
+description = "Calendly bookings + marketing spend pipeline: Delta Lake on S3, metrics in Streamlit"
+requires-python = ">=3.11,<3.12"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]    # lets tests do `import calendly_insights` without sys.path tricks
+testpaths = ["tests"]   # where pytest looks for test files
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
