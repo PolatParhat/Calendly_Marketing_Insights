@@ -1,0 +1,8 @@
+# Libraries the pipeline needs to run.
+# Matches the AWS runtime we deploy to: EMR Serverless emr-spark-8.2.0
+# (Spark 4.1.3, Delta Lake 4.2.0, Python 3.11, Java 17).
+# Local PySpark is 4.1.1 because delta-spark 4.2.0 allows pyspark <= 4.1.1;
+# same Spark 4.1 line as EMR (4.1.3 only adds bug fixes).
+# Install: pip install -r requirements.txt   (needs Java 17)
+pyspark==4.1.1
+delta-spark==4.2.0

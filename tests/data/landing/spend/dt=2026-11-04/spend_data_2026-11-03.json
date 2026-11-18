@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-11-01",
+    "channel": "facebook_paid_ads",
+    "spend": 100.0
+  },
+  {
+    "date": "2026-11-01",
+    "channel": "youtube_paid_ads",
+    "spend": 80.0
+  },
+  {
+    "date": "2026-11-01",
+    "channel": "tiktok_paid_ads",
+    "spend": 50.0
+  },
+  {
+    "date": "2026-11-02",
+    "channel": "facebook_paid_ads",
+    "spend": 125.5
+  },
+  {
+    "date": "2026-11-02",
+    "channel": "youtube_paid_ads",
+    "spend": 90.0
+  },
+  {
+    "date": "2026-11-02",
+    "channel": "tiktok_paid_ads",
+    "spend": 60.0
+  },
+  {
+    "date": "2026-11-03",
+    "channel": "facebook_paid_ads",
+    "spend": 110.0
+  },
+  {
+    "date": "2026-11-03",
+    "channel": "youtube_paid_ads",
+    "spend": 70.0
+  },
+  {
+    "date": "2026-11-03",
+    "channel": "tiktok_paid_ads",
+    "spend": 40.0
+  }
+]
