@@ -23,8 +23,9 @@ def _prepare_local_environment() -> None:
     """Fix the two things that break local Spark on this Mac (see STATUS.md, Environment gotchas)."""
     # 1. Spark's Python helper processes must use this same Python (the venv's 3.11).
     os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
-    # 2. Spark 4 needs Java 17. On macOS, find it if JAVA_HOME is not set.
-    if "JAVA_HOME" not in os.environ and platform.system() == "Darwin":
+    # 2. Spark 4 needs Java 17. On macOS, always point JAVA_HOME at Java 17 for this process,
+    #    even if the shell profile sets another version (this Mac's profile sets Java 11).
+    if platform.system() == "Darwin":
         java_home = subprocess.run(
             ["/usr/libexec/java_home", "-v", "17"],
             check=False,  # if Java 17 is missing, carry on; Spark then shows a clear error
