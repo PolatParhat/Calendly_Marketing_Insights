@@ -1,0 +1,4 @@
+# Tools for development and CI only (not shipped to AWS).
+# Install: pip install -r requirements-dev.txt
+pytest==9.2.0   # runs the tests in tests/
+ruff==0.17.5    # linter: finds bugs and style problems in Python code
