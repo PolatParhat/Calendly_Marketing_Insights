@@ -129,3 +129,9 @@ Received 2026-11-16. SME reply (verbatim):
 |---|----------|--------|--------------|
 | 1 | Meeting load (1.6): which week, and which meetings | Week of the meeting `start_time`; only the 3 marketing event types | same |
 | 2 | "CPB by Channel and Campaign" heatmap | Option a): heatmap shows bookings by channel × campaign; CPB at channel level only | same |
+
+---
+
+## Design approval
+- 2026-11-18: the SME **approved** the architecture and data model after the recorded design walkthrough video.
+- SME message (verbatim): _to paste_

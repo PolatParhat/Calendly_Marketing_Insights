@@ -49,10 +49,10 @@ Steps 4-12 create AWS resources: only after written SME approval (Step 2).
 |------|------|-----------|--------|
 | 0 | Project scaffold + requirements walkthrough + decisions | decisions.md filled | done |
 | 1 | Repo and skeleton: GitHub repo, src/ tests/ infra/, venv, CI runs tests | PR shows green check | next |
-| 2 | Design + SME approval: draw.io diagram, Bronze/Silver/Gold data model, solution design doc | written SME approval in docs/ | |
+| 2 | Design + SME approval: draw.io diagram, Bronze/Silver/Gold data model, solution design doc | written SME approval in docs/ | done (approved 2026-11-18) |
 | 3 | Transformations locally: PySpark + Delta, landing→Bronze→Silver→Gold, 6 metrics | pytest passes; Gold = hand calc | |
 | 4 | AWS foundation (CDK): KMS key, encrypted S3, IAM roles, SNS alert | buckets show SSE-KMS | |
-| 5 | Webhook receiver: API Gateway + Lambda (signature) + Secrets Manager + SQS DLQ; URL to SME | POST lands file in landing/ | |
+| 5 | Webhook receiver: API Gateway + Lambda (signature) + Secrets Manager + SQS retry queue; URL to SME | POST lands file in landing/ | |
 | 6 | Spend ingestion Lambda (copies all files in file_index.json) | 30 files; re-run = no dupes | |
 | 7 | Spark job on EMR Serverless on real S3 data | Delta tables in all 3 layers | |
 | 8 | Scheduling + failure reload: EventBridge Scheduler → Step Functions, retries, alerts | forced failure alerts; re-run fixes | |
