@@ -27,7 +27,7 @@ Steps 4-12 create AWS resources and start only after written SME approval (Step 
 |------|------|-----------|--------|
 | 0 | Project scaffold, requirements walkthrough, decisions | decisions.md filled | ✅ done |
 | 1 | Repo and skeleton: `src/`, `tests/`, `infra/`, venv, CI runs tests | PR shows green check | ⏭ next |
-| 2 | Design + SME approval: draw.io diagram, Bronze/Silver/Gold data model, solution design doc | written SME approval in `docs/` | 🔄 docs done; awaiting SME approval |
+| 2 | Design + SME approval: draw.io diagram, Bronze/Silver/Gold data model, solution design doc | written SME approval in `docs/` | ✅ done |
 | 3 | Transformations locally: PySpark + Delta, landing → Bronze → Silver → Gold, 6 metrics | pytest passes; Gold matches hand calculation | |
 | 4 | AWS foundation (CDK): KMS key, encrypted S3, IAM roles, SNS alert | buckets show SSE-KMS | |
 | 5 | Webhook receiver: API Gateway + Lambda (signature check) + Secrets Manager + SQS retry queue | POST lands a file in `landing/` | |

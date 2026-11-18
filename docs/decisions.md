@@ -28,6 +28,7 @@
 | 2026-11-16 | **SME-confirmed**: meeting load (1.6) = marketing event types only, counted per week of meeting `start_time` | SME follow-up reply 2026-11-16 |
 | 2026-11-16 | **SME-confirmed**: metric 1.4 heatmap shows bookings by channel × campaign; CPB only at channel level (spend has no campaign) | SME follow-up reply 2026-11-16 |
 | 2026-11-18 | Local dev Python = **3.11.9** in `.venv` (not the pyenv default 3.13) | PySpark 3.5 (EMR Serverless 7.x) officially supports Python up to 3.11 |
+| 2026-11-18 | **Design approved by the SME** (architecture, data model, solution design) | Step 2 gate passed; AWS build (Steps 4-12) may start |
 
 ## Change log
 - 2026-11-14: Project scaffold created; requirements PDF moved to docs/00_requirements/ with text copy and diagrams.
@@ -37,3 +38,4 @@
 - 2026-11-16: Data model, follow-up SME questions and solution design drafted (docs/02_design/).
 - 2026-11-16: SME answered both follow-up questions (meeting-load week = start_time; heatmap = bookings, CPB per channel). Design PR #4 merged.
 - 2026-11-18: Handoff. Step 2 docs merged; awaiting video + written SME approval. Plan tables updated (Step 2 in progress; Step 5 uses SQS retry queue).
+- 2026-11-18: Design video recorded and sent; SME approved the design. Step 2 done.

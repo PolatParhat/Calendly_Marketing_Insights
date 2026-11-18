@@ -2,9 +2,9 @@
 Updated: 2026-11-18 by /handoff
 
 ## Where we are
-Step 2 (design + SME approval) docs are done and merged to main (PR #4, PR #5). All SME questions are
-answered. Waiting on: user records the design video and gets **written SME approval**. Step 1 (repo
-skeleton) is next and may run meanwhile (no AWS). Steps 4-12 stay blocked until written approval.
+Steps 0 and 2 done: design docs merged (PR #4, #5), design video recorded, **SME approved the design
+on 2026-11-18**. Next: Step 1 (repo skeleton + CI), then Step 3 (local PySpark + Delta). AWS steps
+(4-12) are now unblocked; the user runs every deploy/destroy.
 
 ## Done this session
 - Plan order changed: design (Step 2) before skeleton (Step 1); empty skeleton branch was deleted.
@@ -16,15 +16,13 @@ skeleton) is next and may run meanwhile (no AWS). Steps 4-12 stay blocked until 
   data model exist in the requirements' sample payload; all doc links resolve.
 
 ## Next actions
-1. User: record the design video from docs/02_design/speaker_notes.md (tabs on GitHub main), send it to the SME.
-2. When approval arrives: paste it; record it in solution_design.md section 13 + sme_questions.md; mark Step 2 done
-   in CLAUDE.md and README.md.
-3. Step 1 on a new branch, one file per message: src/calendly_insights/__init__.py, tests/, infra/,
+1. Paste the SME's approval message into docs/01_sme/sme_questions.md "Design approval" (currently "to paste").
+2. Step 1 on a new branch, one file per message: src/calendly_insights/__init__.py, tests/, infra/,
    requirements.txt + requirements-dev.txt, first pytest test, .github/workflows/ci.yml. Done = green PR check.
    Local venv already exists: `.venv` on Python 3.11.9 (`~/.pyenv/versions/3.11.9/bin/python -m venv .venv`).
 
 ## Open items
-- Written SME approval of architecture + data model (not yet received).
+- SME approval message text not yet pasted into docs (approval itself received 2026-11-18).
 - Webhook URL to the SME after Step 5 deploy; they then send the signing key. Test bookings allowed on all 3 channels.
 - User's practice files test.py and webhook_demo.py untracked in project root; do not commit them.
 

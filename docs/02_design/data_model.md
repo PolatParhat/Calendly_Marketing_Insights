@@ -1,6 +1,6 @@
 # Data model: Bronze / Silver / Gold
 
-Status: draft for SME review (2026-11-16). Architecture: [architecture.png](architecture.png).
+Status: **approved by the SME (2026-11-18)**. Architecture: [architecture.png](architecture.png).
 
 ![Data model](data_model.png)
 

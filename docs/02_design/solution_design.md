@@ -1,6 +1,6 @@
 # Solution design: Calendly Marketing Insights
 
-Status: draft for SME approval (2026-11-16) · Author: Polat
+Status: **approved by the SME (2026-11-18)** · Author: Polat
 Related: [architecture.png](architecture.png) · [data_model.md](data_model.md) · [data_model.png](data_model.png) ·
 [SME questions and answers](../01_sme/sme_questions.md) · [decision log](../decisions.md)
 
@@ -144,6 +144,7 @@ SME-confirmed 2026-11-16 (see [sme_questions.md](../01_sme/sme_questions.md), fo
 ## 13. Approval
 | Role | Name | Decision | Date |
 |---|---|---|---|
-| SME | | ☐ Approved ☐ Approved with changes ☐ Not approved | |
+| SME | | ☑ Approved | 2026-11-18 |
 
-Comments:
+Comments: approved after the recorded design walkthrough video (script: [speaker_notes.md](speaker_notes.md)).
+Approval reported by Polat on 2026-11-18; SME message text is recorded in [sme_questions.md](../01_sme/sme_questions.md#design-approval).
