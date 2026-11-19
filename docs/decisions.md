@@ -33,6 +33,11 @@
 | 2026-11-19 | Spark session timezone = **UTC**; conversion to US Eastern done explicitly in code | One clear rule for every timestamp |
 | 2026-11-19 | Bronze = insert-only Delta MERGE keyed on the landing **file path** (`source_file`; spend: + date, channel); webhook bodies stored whole as text (`raw_json`) | Each file loaded once; re-runs add nothing; Bronze survives payload shape changes |
 | 2026-11-19 | Test data = small fake landing files in `tests/data/landing/` with hand-calculated answers in `tests/data/README.md` | Step 3 "done" = Gold equals the hand calculation |
+| 2026-11-19 | Silver dedupe: **latest `webhook_created_at` per booking_id** (tie-break: source_file); spend_daily: **newest `file_date` per (date, channel)**; money = `decimal(12,2)` | Duplicate deliveries collapse; restated spend replaces old value; exact money math |
+| 2026-11-19 | Gold = full recalculation from Silver each run, written with MERGE + **`whenNotMatchedBySourceDelete`** (`merge_into(..., delete_missing=True)`) | Gold mirrors Silver exactly (no stale groups) while keeping "MERGE everywhere" |
+| 2026-11-19 | Gold 1.2: booking day with no spend file yet keeps **spend_usd = null** (not 0), bookings = 0 when missing | Unknown spend is not free spend |
+| 2026-11-19 | `is_partial_week` = week not fully inside [min, max] booking_date | Dashboard labels edge weeks instead of showing fake dips |
+| 2026-11-19 | Tests run with process **TZ=UTC** (`tests/conftest.py`) | `collect()` converts timestamps to the machine's local zone; UTC makes results identical on laptop and CI |
 
 ## Change log
 - 2026-11-14: Project scaffold created; requirements PDF moved to docs/00_requirements/ with text copy and diagrams.
@@ -44,3 +49,4 @@
 - 2026-11-18: Handoff. Step 2 docs merged; awaiting video + written SME approval. Plan tables updated (Step 2 in progress; Step 5 uses SQS retry queue).
 - 2026-11-18: Design video recorded and sent; SME approved the design. Step 2 done.
 - 2026-11-19: Step 1 merged (PR #7, green CI). Step 3 started on branch step3/local-transformations: Spark+Delta setup, sample data, Bronze load (11 tests pass).
+- 2026-11-19: Step 3 done: Silver (bookings 4, booking_hosts 5, spend_daily 9), Gold 6 tables, pipeline.py run script, CI with Java 17 (32 tests). PR #8 merged (ca08946).
