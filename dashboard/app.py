@@ -76,12 +76,19 @@ day_spend = metrics.filter_days(gold["daily_spend_bookings_by_channel"], "date",
 
 # ---------------------------------------------------------------- headline numbers
 total_bookings = int(day_bookings["bookings"].sum())
-total_spend = float(day_spend["spend_usd"].sum())
+total_spend = metrics.total_spend(day_spend)
 cpb_all = metrics.overall_cpb(day_spend)
 k1, k2, k3 = st.columns(3)
 k1.metric("Booked calls", f"{total_bookings:,}")
-k2.metric("Ad spend", f"${total_spend:,.2f}")
-k3.metric("Average CPB (total spend ÷ total bookings)", f"${cpb_all:,.2f}" if cpb_all else "no bookings")
+k2.metric("Ad spend", "not published yet" if total_spend is None else f"${total_spend:,.2f}")
+k3.metric(
+    "Average CPB (total spend ÷ total bookings)",
+    metrics.cpb_note(total_spend, total_bookings) or f"${cpb_all:,.2f}",
+)
+st.caption(
+    "Spend for a day is published the next morning (06:00 US Eastern), so the latest day has "
+    "bookings but no spend yet. CPB adds up the known spend for the period."
+)
 
 # ---------------------------------------------------------------- 1.1 and 1.2
 left, right = st.columns(2)
@@ -118,9 +125,10 @@ with right:
         text=alt.Text("cpb_usd:Q", format="$,.2f")
     )
     st.altair_chart(bars + labels, width="stretch")
-    st.caption("Lower is better. A channel with spend but no bookings shows 'no bookings'.")
-    shown = cpb.assign(cpb_usd=cpb["cpb_usd"].map(lambda v: "no bookings" if pd.isna(v) else v))
-    table_view(shown)
+    st.caption(
+        "Lower is better. No bar = 'no bookings' or 'spend not published yet' (see the table)."
+    )
+    table_view(cpb)
 
 # ---------------------------------------------------------------- 1.3
 st.subheader("1.3 Bookings trend")
