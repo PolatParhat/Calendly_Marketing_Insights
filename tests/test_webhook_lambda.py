@@ -86,3 +86,12 @@ def test_s3_and_queue_failure_returns_500_so_calendly_knows():
         sqs=FakeSQS(fail=True),
     )
     assert result["statusCode"] == 500
+
+
+def test_test_script_signature_is_accepted_by_the_lambda():
+    import send_test_webhook
+
+    body = send_test_webhook.test_body()
+    header = send_test_webhook.sign(body, KEY, int(NOW.timestamp()))
+    result, s3, _ = call({"body": body, "headers": {"Calendly-Webhook-Signature": header}})
+    assert result["statusCode"] == 200 and len(s3.objects) == 1

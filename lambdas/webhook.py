@@ -25,7 +25,10 @@ logger.setLevel(logging.INFO)
 SIGNATURE_HEADER = "calendly-webhook-signature"  # API Gateway gives header names in lower case
 MAX_SIGNATURE_AGE_SECONDS = 180  # Calendly's advice: reject old signatures (replay attacks)
 
-_signing_key_cache: dict[str, str] = {}  # survives between calls while the Lambda stays warm
+# Cache the key between calls while the Lambda stays warm, but re-read it every 5 minutes so a new
+# key (put-secret-value) is picked up without a redeploy.
+KEY_CACHE_SECONDS = 300
+_signing_key_cache: dict[str, tuple[str, float]] = {}
 
 
 def verify_signature(header: str | None, body: str, signing_key: str, now: float) -> bool:
@@ -64,10 +67,11 @@ def _response(status: int, message: str) -> dict:
 
 
 def _signing_key(secrets_client, secret_arn: str) -> str:
-    if secret_arn not in _signing_key_cache:
-        value = secrets_client.get_secret_value(SecretId=secret_arn)["SecretString"]
-        _signing_key_cache[secret_arn] = value.strip()
-    return _signing_key_cache[secret_arn]
+    cached = _signing_key_cache.get(secret_arn)
+    if cached is None or time.monotonic() - cached[1] > KEY_CACHE_SECONDS:
+        value = secrets_client.get_secret_value(SecretId=secret_arn)["SecretString"].strip()
+        _signing_key_cache[secret_arn] = cached = (value, time.monotonic())
+    return cached[0]
 
 
 def handle(event: dict, s3, sqs, secrets, env: dict, now: datetime) -> dict:
