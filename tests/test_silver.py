@@ -1,9 +1,11 @@
 """Silver tests. Expected numbers come from tests/data/README.md."""
 
 from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pyspark.sql import functions as F
 
 from calendly_insights.bronze import load_bronze
 from calendly_insights.silver import load_silver
@@ -88,3 +90,31 @@ def test_running_twice_adds_nothing(spark, tmp_path):
 
     assert spark.read.format("delta").load(f"{root}/silver/bookings").count() == 4
     assert spark.read.format("delta").load(f"{root}/silver/booking_hosts").count() == 5
+    assert spark.read.format("delta").load(f"{root}/silver/spend_daily").count() == 9
+
+
+def test_spend_daily_one_row_per_day_and_channel(silver):
+    # 15 Bronze rows (two overlapping files) -> 3 days x 3 channels
+    assert silver("spend_daily").count() == 9
+
+
+def test_spend_newest_file_wins(silver):
+    spend = {(str(r.spend_date), r.channel): r for r in silver("spend_daily").collect()}
+    restated = spend[("2026-11-02", "facebook_paid_ads")]
+    assert restated.spend_usd == Decimal("125.50")  # not 120.00 from the older file
+    assert restated.source_file.endswith("spend_data_2026-11-03.json")
+
+
+def test_spend_totals_per_channel(silver):
+    totals = {
+        r.channel: r.total
+        for r in silver("spend_daily")
+        .groupBy("channel")
+        .agg(F.sum("spend_usd").alias("total"))
+        .collect()
+    }
+    assert totals == {
+        "facebook_paid_ads": Decimal("335.50"),
+        "youtube_paid_ads": Decimal("240.00"),
+        "tiktok_paid_ads": Decimal("150.00"),
+    }

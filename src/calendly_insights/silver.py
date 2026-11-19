@@ -1,7 +1,8 @@
-"""Bronze -> Silver: turn raw webhook JSON into clean, typed booking tables.
+"""Bronze -> Silver: turn raw rows into clean, typed, de-duplicated tables.
 
 silver.bookings       one row per marketing booking (3 channels only), duplicates collapsed
 silver.booking_hosts  one row per (booking, host), because a meeting can have several hosts
+silver.spend_daily    one row per (date, channel): the spend from the newest file that has it
 
 Rules (docs/02_design/data_model.md, SME-confirmed): channel comes from the event type; campaign is
 utm_campaign or "Unknown"; timestamps stay in UTC and get US Eastern copies (suffix _et).
@@ -130,8 +131,29 @@ def build_booking_hosts(bookings: DataFrame) -> DataFrame:
     )
 
 
+def build_spend_daily(spend_raw: DataFrame) -> DataFrame:
+    """Bronze spend rows -> one row per (date, channel), newest file wins.
+
+    Each spend file holds a rolling 30-day window, so the same (date, channel) is in many files.
+    If a newer file restates a value (a late correction), the newer value is the true one.
+    """
+    newest_first = Window.partitionBy("date", "channel").orderBy(F.col("file_date").desc())
+    return (
+        spend_raw.withColumn("rn", F.row_number().over(newest_first))
+        .where("rn = 1")
+        .select(
+            F.to_date("date").alias("spend_date"),
+            "channel",
+            # text -> exact money type (12 digits, 2 after the point); float would round badly
+            F.col("spend").cast("decimal(12,2)").alias("spend_usd"),
+            "source_file",
+            F.current_timestamp().alias("updated_at"),
+        )
+    )
+
+
 def load_silver(spark: SparkSession, bronze_root: str, silver_root: str) -> None:
-    """Rebuild Silver from Bronze and MERGE it in (re-running changes nothing)."""
+    """Rebuild all Silver tables from Bronze and MERGE them in (re-running changes nothing)."""
     bronze_events = spark.read.format("delta").load(f"{bronze_root}/calendly_events_raw")
     bookings = build_bookings(bronze_events)
 
@@ -147,5 +169,12 @@ def load_silver(spark: SparkSession, bronze_root: str, silver_root: str) -> None
         build_booking_hosts(bookings),
         f"{silver_root}/booking_hosts",
         keys=["booking_id", "host_user_id"],
+        update_existing=True,
+    )
+    merge_into(
+        spark,
+        build_spend_daily(spark.read.format("delta").load(f"{bronze_root}/spend_raw")),
+        f"{silver_root}/spend_daily",
+        keys=["spend_date", "channel"],
         update_existing=True,
     )
