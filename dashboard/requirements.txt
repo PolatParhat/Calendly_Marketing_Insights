@@ -1,0 +1,5 @@
+# Libraries for the Streamlit dashboard (dashboard/app.py).
+# Install: pip install -r dashboard/requirements.txt
+streamlit==1.67.0   # the web dashboard
+boto3==1.44.6       # AWS SDK (Software Development Kit): runs the Athena queries
+pandas==3.1.1       # tables in memory for the charts
