@@ -293,7 +293,11 @@ class CalendlyInsightsStack(Stack):
                 f"--conf spark.jars={DELTA_JARS}",
                 "--conf spark.driver.cores=1 --conf spark.driver.memory=2g",
                 "--conf spark.executor.cores=1 --conf spark.executor.memory=2g",
-                "--conf spark.executor.instances=1 --conf spark.dynamicAllocation.maxExecutors=2",
+                # EMR Serverless starts with 3 executors by default; that must not exceed
+                # maxExecutors, so set the start value too (first run failed without it).
+                "--conf spark.executor.instances=1",
+                "--conf spark.dynamicAllocation.initialExecutors=1",
+                "--conf spark.dynamicAllocation.maxExecutors=2",
             ]
         )
 
