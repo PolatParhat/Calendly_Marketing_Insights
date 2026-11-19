@@ -47,7 +47,8 @@ from calendly_infra.job_package import REPO_ROOT, build_job_package
 # EMR Serverless release: Spark 4.1.3 + Delta Lake 4.2.0, Python 3.11, Java 17 (same as local).
 EMR_RELEASE = "emr-spark-8.2.0"
 # Delta Lake ships with EMR; these settings put its jar files on Spark's class path.
-DELTA_JARS = "/usr/share/aws/delta/lib/delta-spark.jar,/usr/share/aws/delta/lib/delta-storage.jar"
+DELTA_SPARK_JAR = "/usr/share/aws/delta/lib/delta-spark.jar"
+DELTA_JARS = f"{DELTA_SPARK_JAR},/usr/share/aws/delta/lib/delta-storage.jar"
 
 GLUE_DATABASE = "calendly_gold"
 ATHENA_WORKGROUP = "calendly-insights"
@@ -289,7 +290,10 @@ class CalendlyInsightsStack(Stack):
 
         spark_submit_parameters = " ".join(
             [
-                f"--conf spark.submit.pyFiles=s3://{artifacts.bucket_name}/emr/calendly_insights.zip",
+                # Python import path: our package + the Delta jar, which also holds Delta's Python
+                # API (`from delta.tables import DeltaTable`); without it: No module named 'delta'.
+                (f"--conf spark.submit.pyFiles=s3://{artifacts.bucket_name}/emr/calendly_insights.zip,"
+                f"{DELTA_SPARK_JAR}"),
                 f"--conf spark.jars={DELTA_JARS}",
                 "--conf spark.driver.cores=1 --conf spark.driver.memory=2g",
                 "--conf spark.executor.cores=1 --conf spark.executor.memory=2g",

@@ -107,3 +107,12 @@ def test_spark_executor_settings_are_consistent(template):
     maximum = int(conf["spark.dynamicAllocation.maxExecutors"])
     assert int(conf["spark.dynamicAllocation.initialExecutors"]) <= maximum
     assert int(conf["spark.executor.instances"]) <= maximum
+
+
+def test_delta_python_api_is_on_the_python_path(template):
+    """`import delta` on EMR needs the Delta jar in spark.submit.pyFiles (first real run failed)."""
+    (machine,) = template.find_resources("AWS::StepFunctions::StateMachine").values()
+    definition = json.dumps(machine["Properties"]["DefinitionString"])
+    py_files = definition.split("spark.submit.pyFiles=")[1].split(" --conf")[0]
+    assert "calendly_insights.zip" in py_files
+    assert "/usr/share/aws/delta/lib/delta-spark.jar" in py_files
