@@ -38,6 +38,17 @@
 | 2026-11-19 | Gold 1.2: booking day with no spend file yet keeps **spend_usd = null** (not 0), bookings = 0 when missing | Unknown spend is not free spend |
 | 2026-11-19 | `is_partial_week` = week not fully inside [min, max] booking_date | Dashboard labels edge weeks instead of showing fake dips |
 | 2026-11-19 | Tests run with process **TZ=UTC** (`tests/conftest.py`) | `collect()` converts timestamps to the machine's local zone; UTC makes results identical on laptop and CI |
+| 2026-11-19 | **One CDK stack** (`CalendlyInsights`, `infra/calendly_infra/stack.py`) for Steps 4-9 | One deploy/destroy, no cross-stack references; sections in build order |
+| 2026-11-19 | Lake bucket + KMS key **RETAIN** on destroy; artifacts bucket (job code) DESTROY | Booking data cannot be fetched again; code is rebuilt from Git on every deploy |
+| 2026-11-19 | Lambdas: **Python 3.11, arm64**, standard library + boto3 only, one `lambdas/` asset | No packaging/Docker step; Graviton is cheaper; same Python as the venv |
+| 2026-11-19 | Webhook: signature max age **180 s**; only `invitee.created` stored (others → 200 "ignored"); file = `landing/calendly/dt=<received UTC day>/<invitee id>.json`; signing key cached **5 min** | Calendly's replay-attack advice; same-day duplicate overwrites one file; new key works without redeploy |
+| 2026-11-19 | Spend landing key `dt=` = **publish day (file date + 1)**, and files already in S3 are **skipped** | Key depends only on the file name, so re-runs add nothing (Step 6 "no dupes"); matches the test data layout |
+| 2026-11-19 | **Data-quality checks** (`quality.py`) end every pipeline run and raise on failure | Design 4.3: bad data stops the run and alerts instead of reaching Gold users |
+| 2026-11-19 | Gold tables registered for Athena by the workflow: `CREATE EXTERNAL TABLE IF NOT EXISTS … TBLPROPERTIES ('table_type'='DELTA')` | Athena's native Delta reader; schema comes from the Delta log; safe to repeat daily |
+| 2026-11-19 | EMR Serverless app: **ARM64**, auto-stop after 5 min idle, max 8 vCPU / 32 GB; Delta jars from `/usr/share/aws/delta/lib/` | Cheaper Graviton; no idle cost; cost guard. Jar path to confirm on first run (runbook) |
+| 2026-11-19 | Workflow: Parallel wrapper with one Catch → SNS email; each step 2 retries with back-off; 2 h timeout + alarm | One alert path for every step |
+| 2026-11-19 | Dashboard reads Gold via **Athena (boto3)** or a **local lake (Spark)**; metric 1.5 shows all-to-date (its Gold table has no date) | Local mode lets the dashboard be tested and demoed without AWS |
+| 2026-11-19 | CI: second job runs **`cdk synth`** with a placeholder account; test job installs dashboard + infra libs | Step 11: broken infrastructure code fails the PR |
 
 ## Change log
 - 2026-11-14: Project scaffold created; requirements PDF moved to docs/00_requirements/ with text copy and diagrams.
@@ -50,3 +61,4 @@
 - 2026-11-18: Design video recorded and sent; SME approved the design. Step 2 done.
 - 2026-11-19: Step 1 merged (PR #7, green CI). Step 3 started on branch step3/local-transformations: Spark+Delta setup, sample data, Bronze load (11 tests pass).
 - 2026-11-19: Step 3 done: Silver (bookings 4, booking_hosts 5, spend_daily 9), Gold 6 tables, pipeline.py run script, CI with Java 17 (32 tests). PR #8 merged (ca08946).
+- 2026-11-19: Steps 4-12 code written on branch build/steps-4-12: CDK stack, 3 Lambdas, data-quality checks, EMR entry point, Streamlit dashboard, CI cdk synth, runbook, final walkthrough video script. 64 tests pass locally; nothing deployed yet (user runs docs/03_deploy/runbook.md).

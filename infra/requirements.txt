@@ -1,0 +1,4 @@
+# AWS CDK (Cloud Development Kit) libraries for the infrastructure code in this folder.
+# Install: pip install -r infra/requirements.txt   (the `cdk` command itself comes from npm)
+aws-cdk-lib==2.277.0
+constructs==10.8.1

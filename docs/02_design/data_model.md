@@ -49,7 +49,7 @@ GOLD    one small table per dashboard metric
 | `landing/calendly/dt=YYYY-MM-DD/<invitee_uuid>.json` | webhook Lambda | one webhook body, exactly as Calendly sent it |
 | `landing/spend/dt=YYYY-MM-DD/spend_data_YYYY-MM-DD.json` | spend Lambda | one spend file, exactly as published |
 
-`dt=` is the day we received the file (UTC). Landing files are kept, so any layer can be rebuilt from them.
+`dt=` is the day we received the webhook (UTC), and for spend the publish day (file date + 1), so re-copying a spend file never makes a second copy. Landing files are kept, so any layer can be rebuilt from them.
 
 ---
 
