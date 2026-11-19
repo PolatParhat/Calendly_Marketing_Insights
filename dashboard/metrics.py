@@ -26,23 +26,40 @@ def filter_days(df: pd.DataFrame, column: str, start: date, end: date, channels:
     return out[out["channel"].isin(channels)] if "channel" in out else out
 
 
+def total_spend(daily_spend_bookings: pd.DataFrame) -> float | None:
+    """Sum of known spend; None when no spend is known yet (e.g. today: published tomorrow 06:00)."""
+    spend = daily_spend_bookings["spend_usd"].astype(float).sum(min_count=1)
+    return None if pd.isna(spend) else float(spend)
+
+
+def cpb_note(spend: float | None, bookings: int) -> str | None:
+    """Why there is no CPB number: unknown spend is not free spend, and 0 bookings can't divide."""
+    if spend is None or pd.isna(spend):
+        return "spend not published yet"
+    if not bookings:
+        return "no bookings"
+    return None
+
+
 def cpb_by_channel(daily_spend_bookings: pd.DataFrame) -> pd.DataFrame:
-    """1.2: per channel: total spend, total bookings, CPB (None = "no bookings")."""
-    sums = (
-        daily_spend_bookings.groupby("channel", as_index=False)
-        .agg(spend_usd=("spend_usd", "sum"), bookings=("bookings", "sum"))
-        .astype({"spend_usd": float, "bookings": int})
+    """1.2: per channel: total spend, total bookings, CPB; `note` says why CPB is missing."""
+    sums = daily_spend_bookings.groupby("channel", as_index=False).agg(
+        spend_usd=("spend_usd", lambda s: s.astype(float).sum(min_count=1)),
+        bookings=("bookings", "sum"),
     )
+    sums["bookings"] = sums["bookings"].astype(int)
+    sums["note"] = [cpb_note(s, b) for s, b in zip(sums["spend_usd"], sums["bookings"])]
     sums["cpb_usd"] = [
-        round(s / b, 2) if b else None for s, b in zip(sums["spend_usd"], sums["bookings"])
+        None if note else round(s / b, 2)
+        for s, b, note in zip(sums["spend_usd"], sums["bookings"], sums["note"])
     ]
     return sums.sort_values("cpb_usd", na_position="last").reset_index(drop=True)
 
 
 def overall_cpb(daily_spend_bookings: pd.DataFrame) -> float | None:
-    spend = float(daily_spend_bookings["spend_usd"].sum())
+    spend = total_spend(daily_spend_bookings)
     bookings = int(daily_spend_bookings["bookings"].sum())
-    return round(spend / bookings, 3) if bookings else None
+    return None if cpb_note(spend, bookings) else round(spend / bookings, 3)
 
 
 def daily_with_cumulative(daily_bookings: pd.DataFrame) -> pd.DataFrame:

@@ -32,8 +32,19 @@ def test_cpb_by_channel_and_overall(gold):
 
 def test_channel_with_spend_but_no_bookings_shows_none():
     df = pd.DataFrame({"channel": ["x"], "spend_usd": [10.0], "bookings": [0]})
-    assert metrics.cpb_by_channel(df)["cpb_usd"].tolist() == [None]
+    cpb = metrics.cpb_by_channel(df)
+    assert cpb["cpb_usd"].tolist() == [None] and cpb["note"].tolist() == ["no bookings"]
     assert metrics.overall_cpb(df) is None
+
+
+def test_unknown_spend_is_not_free_spend():
+    """Today: bookings exist, spend file comes tomorrow. Must not show $0 spend or $0 CPB."""
+    df = pd.DataFrame({"channel": ["x", "y"], "spend_usd": [None, None], "bookings": [2, 1]})
+    assert metrics.total_spend(df) is None
+    assert metrics.overall_cpb(df) is None
+    cpb = metrics.cpb_by_channel(df)
+    assert cpb["cpb_usd"].tolist() == [None, None]
+    assert set(cpb["note"]) == {"spend not published yet"}
 
 
 def test_date_filter_and_cumulative(gold):
