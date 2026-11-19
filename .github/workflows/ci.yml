@@ -1,5 +1,5 @@
 # CI (Continuous Integration): on every pull request to main, and every push to main,
-# GitHub starts a fresh Linux machine, installs our tools, and runs lint + tests.
+# GitHub starts fresh Linux machines that run lint + tests, and check the infrastructure code builds.
 name: CI
 
 on:
@@ -23,6 +23,8 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             requirements-dev.txt
+            dashboard/requirements.txt
+            infra/requirements.txt
 
       - name: Install Java 17 (Spark 4 runs on the Java Virtual Machine)
         uses: actions/setup-java@v6
@@ -30,11 +32,46 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Install pipeline libraries and dev tools
-        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Install pipeline, dashboard and infrastructure libraries and dev tools
+        run: >
+          pip install -r requirements.txt -r requirements-dev.txt
+          -r dashboard/requirements.txt -r infra/requirements.txt
 
       - name: Lint (ruff)
         run: ruff check .
 
       - name: Tests (pytest)
         run: pytest -v
+
+  # CDK (Cloud Development Kit) synth: turns infra/ into a CloudFormation template without touching
+  # AWS. If the infrastructure code is broken, the pull request shows a red cross. No deploy here:
+  # the developer runs `cdk deploy` by hand.
+  cdk-synth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v7
+
+      - name: Install Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: infra/requirements.txt
+
+      - name: Install Node.js (the cdk command runs on Node)
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Install the CDK command line and the CDK Python library
+        run: |
+          npm install -g aws-cdk
+          pip install -r infra/requirements.txt
+
+      - name: cdk synth
+        working-directory: infra
+        env:
+          CDK_DEFAULT_ACCOUNT: "111111111111"  # placeholder: synth needs no real account
+          CDK_DEFAULT_REGION: us-east-1
+        run: cdk synth --quiet
