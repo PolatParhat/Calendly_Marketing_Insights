@@ -1,0 +1,46 @@
+{
+  "created_at": "2026-11-04T20:15:00.000000Z",
+  "created_by": "https://api.calendly.com/users/host-alice",
+  "event": "invitee.created",
+  "payload": {
+    "created_at": "2026-11-04T20:15:00.000000Z",
+    "email": "lead4@example.com",
+    "event": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000004",
+    "name": "Test Lead 4",
+    "questions_and_answers": [],
+    "rescheduled": false,
+    "scheduled_event": {
+      "created_at": "2026-11-04T20:15:00.000000Z",
+      "end_time": "2026-11-06T22:00:00.000000Z",
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/host-alice",
+          "user_email": "alice@example.com",
+          "user_name": "Alice Host"
+        },
+        {
+          "user": "https://api.calendly.com/users/host-bob",
+          "user_email": "bob@example.com",
+          "user_name": "Bob Host"
+        }
+      ],
+      "event_type": "https://api.calendly.com/event_types/70022cde-e64f-49a0-9362-a815186005dc",
+      "name": "Free Consultation (TikTok)",
+      "start_time": "2026-11-06T21:00:00.000000Z",
+      "status": "active",
+      "uri": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000004"
+    },
+    "status": "active",
+    "timezone": "America/New_York",
+    "tracking": {
+      "utm_campaign": "",
+      "utm_source": null,
+      "utm_medium": null,
+      "utm_content": null,
+      "utm_term": null,
+      "salesforce_uuid": null
+    },
+    "updated_at": "2026-11-04T20:15:00.000000Z",
+    "uri": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000004/invitees/00000000-0000-0000-0000-000000000004"
+  }
+}

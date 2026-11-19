@@ -1,0 +1,41 @@
+{
+  "created_at": "2026-11-03T16:00:00.000000Z",
+  "created_by": "https://api.calendly.com/users/host-alice",
+  "event": "invitee.created",
+  "payload": {
+    "created_at": "2026-11-03T16:00:00.000000Z",
+    "email": "lead3@example.com",
+    "event": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000003",
+    "name": "Test Lead 3",
+    "questions_and_answers": [],
+    "rescheduled": false,
+    "scheduled_event": {
+      "created_at": "2026-11-03T16:00:00.000000Z",
+      "end_time": "2026-11-10T15:00:00.000000Z",
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/host-alice",
+          "user_email": "alice@example.com",
+          "user_name": "Alice Host"
+        }
+      ],
+      "event_type": "https://api.calendly.com/event_types/2b5580c2-13e9-4283-8b4d-56401cf31554",
+      "name": "Free Consultation (YouTube)",
+      "start_time": "2026-11-10T14:00:00.000000Z",
+      "status": "active",
+      "uri": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000003"
+    },
+    "status": "active",
+    "timezone": "America/New_York",
+    "tracking": {
+      "utm_campaign": "yt_webinar",
+      "utm_source": "youtube",
+      "utm_medium": "video",
+      "utm_content": null,
+      "utm_term": null,
+      "salesforce_uuid": null
+    },
+    "updated_at": "2026-11-03T16:00:00.000000Z",
+    "uri": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000003/invitees/00000000-0000-0000-0000-000000000003"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "created_at": "2026-11-03T10:00:00.000000Z",
+  "created_by": "https://api.calendly.com/users/host-alice",
+  "event": "invitee.created",
+  "payload": {
+    "created_at": "2026-11-03T10:00:00.000000Z",
+    "email": "lead6@example.com",
+    "event": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000006",
+    "name": "Test Lead 6",
+    "questions_and_answers": [],
+    "rescheduled": false,
+    "scheduled_event": {
+      "created_at": "2026-11-03T10:00:00.000000Z",
+      "end_time": "2026-11-07T16:00:00.000000Z",
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/host-bob",
+          "user_email": "bob@example.com",
+          "user_name": "Bob Host"
+        }
+      ],
+      "event_type": "https://api.calendly.com/event_types/d639ecd3-8718-4068-955a-436b10d72c78",
+      "name": "Data Engineer Academy Info Session",
+      "start_time": "2026-11-07T15:00:00.000000Z",
+      "status": "active",
+      "uri": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000006"
+    },
+    "status": "active",
+    "timezone": "America/New_York",
+    "tracking": {
+      "utm_campaign": null,
+      "utm_source": null,
+      "utm_medium": null,
+      "utm_content": null,
+      "utm_term": null,
+      "salesforce_uuid": null
+    },
+    "updated_at": "2026-11-03T10:00:00.000000Z",
+    "uri": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000006/invitees/00000000-0000-0000-0000-000000000006"
+  }
+}

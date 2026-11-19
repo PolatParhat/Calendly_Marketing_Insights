@@ -1,0 +1,41 @@
+{
+  "created_at": "2026-11-03T03:30:00.000000Z",
+  "created_by": "https://api.calendly.com/users/host-alice",
+  "event": "invitee.created",
+  "payload": {
+    "created_at": "2026-11-03T03:30:00.000000Z",
+    "email": "lead2@example.com",
+    "event": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000002",
+    "name": "Test Lead 2",
+    "questions_and_answers": [],
+    "rescheduled": false,
+    "scheduled_event": {
+      "created_at": "2026-11-03T03:30:00.000000Z",
+      "end_time": "2026-11-05T20:00:00.000000Z",
+      "event_memberships": [
+        {
+          "user": "https://api.calendly.com/users/host-bob",
+          "user_email": "bob@example.com",
+          "user_name": "Bob Host"
+        }
+      ],
+      "event_type": "https://api.calendly.com/event_types/79652b8a-1688-4d0b-ba8f-733c70856de4",
+      "name": "Free Consultation (Facebook)",
+      "start_time": "2026-11-05T19:00:00.000000Z",
+      "status": "active",
+      "uri": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000002"
+    },
+    "status": "active",
+    "timezone": "America/New_York",
+    "tracking": {
+      "utm_campaign": null,
+      "utm_source": null,
+      "utm_medium": null,
+      "utm_content": null,
+      "utm_term": null,
+      "salesforce_uuid": null
+    },
+    "updated_at": "2026-11-03T03:30:00.000000Z",
+    "uri": "https://api.calendly.com/scheduled_events/10000000-0000-0000-0000-000000000002/invitees/00000000-0000-0000-0000-000000000002"
+  }
+}
