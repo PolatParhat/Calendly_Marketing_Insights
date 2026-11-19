@@ -10,11 +10,14 @@ def merge_into(
     path: str,
     keys: list[str],
     update_existing: bool,
+    delete_missing: bool = False,
 ) -> None:
     """MERGE df into the Delta table at path, matching rows on the key columns.
 
     update_existing=False -> only insert rows whose key is new (Bronze: raw data never changes).
     update_existing=True  -> also overwrite rows whose key already exists (Silver/Gold: latest wins).
+    delete_missing=True   -> also delete table rows whose key is not in df any more (Gold: the table
+                             is a full recalculation, so it must mirror df exactly).
     The first run creates the table.
     """
     if not DeltaTable.isDeltaTable(spark, path):
@@ -25,4 +28,6 @@ def merge_into(
     merge = DeltaTable.forPath(spark, path).alias("t").merge(df.alias("s"), condition)
     if update_existing:
         merge = merge.whenMatchedUpdateAll()
+    if delete_missing:
+        merge = merge.whenNotMatchedBySourceDelete()
     merge.whenNotMatchedInsertAll().execute()
