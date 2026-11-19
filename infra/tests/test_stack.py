@@ -95,3 +95,15 @@ def test_alert_email_subscription(template):
     template.has_resource_properties(
         "AWS::SNS::Subscription", {"Protocol": "email", "Endpoint": "alerts@example.com"}
     )
+
+
+def test_spark_executor_settings_are_consistent(template):
+    """EMR rejects the job if the start/fixed executor count is above maxExecutors."""
+    import re
+
+    (machine,) = template.find_resources("AWS::StepFunctions::StateMachine").values()
+    definition = json.dumps(machine["Properties"]["DefinitionString"])
+    conf = dict(re.findall(r"--conf (spark\.[\w.]+)=(\w+)", definition))
+    maximum = int(conf["spark.dynamicAllocation.maxExecutors"])
+    assert int(conf["spark.dynamicAllocation.initialExecutors"]) <= maximum
+    assert int(conf["spark.executor.instances"]) <= maximum
