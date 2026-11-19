@@ -29,6 +29,10 @@
 | 2026-11-16 | **SME-confirmed**: metric 1.4 heatmap shows bookings by channel × campaign; CPB only at channel level (spend has no campaign) | SME follow-up reply 2026-11-16 |
 | 2026-11-18 | Local dev Python = **3.11.9** in `.venv` (not the pyenv default 3.13) | PySpark 3.5 (EMR Serverless 7.x) officially supports Python up to 3.11 |
 | 2026-11-18 | **Design approved by the SME** (architecture, data model, solution design) | Step 2 gate passed; AWS build (Steps 4-12) may start |
+| 2026-11-19 | Local Spark = **pyspark 4.1.1 + delta-spark 4.2.0** (`requirements.txt`); EMR Serverless target = **emr-spark-8.2.0** (Spark 4.1.3, Delta 4.2.0, Python 3.11, Java 17) | delta-spark 4.2.0 requires pyspark<=4.1.1; same minor Spark/Delta as EMR so local tests match the cloud run (replaces the earlier "PySpark 3.5" assumption) |
+| 2026-11-19 | Spark session timezone = **UTC**; conversion to US Eastern done explicitly in code | One clear rule for every timestamp |
+| 2026-11-19 | Bronze = insert-only Delta MERGE keyed on the landing **file path** (`source_file`; spend: + date, channel); webhook bodies stored whole as text (`raw_json`) | Each file loaded once; re-runs add nothing; Bronze survives payload shape changes |
+| 2026-11-19 | Test data = small fake landing files in `tests/data/landing/` with hand-calculated answers in `tests/data/README.md` | Step 3 "done" = Gold equals the hand calculation |
 
 ## Change log
 - 2026-11-14: Project scaffold created; requirements PDF moved to docs/00_requirements/ with text copy and diagrams.
@@ -39,3 +43,4 @@
 - 2026-11-16: SME answered both follow-up questions (meeting-load week = start_time; heatmap = bookings, CPB per channel). Design PR #4 merged.
 - 2026-11-18: Handoff. Step 2 docs merged; awaiting video + written SME approval. Plan tables updated (Step 2 in progress; Step 5 uses SQS retry queue).
 - 2026-11-18: Design video recorded and sent; SME approved the design. Step 2 done.
+- 2026-11-19: Step 1 merged (PR #7, green CI). Step 3 started on branch step3/local-transformations: Spark+Delta setup, sample data, Bronze load (11 tests pass).
