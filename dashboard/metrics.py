@@ -9,7 +9,7 @@ from datetime import date, timedelta
 import pandas as pd
 
 CHANNELS = ["facebook_paid_ads", "youtube_paid_ads", "tiktok_paid_ads"]
-DAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]  # as Silver writes them (EEEE)
 
 
 def monday(d: date) -> date:
