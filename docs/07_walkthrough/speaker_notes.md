@@ -17,9 +17,16 @@ Numbers marked **[fill: …]** come from your own deployed run; write them in be
 - In the dashboard, set the **period to the days that have bookings** (bookings start when the webhook went live,
   2026-11-19; no backfill). Over the full 60 days of spend the CPB looks huge, because 60 days of spend are divided
   by a few days of bookings.
-- **Record on or after 2026-11-20, after 07:15 US Eastern (04:15 your time).** The 07:00 scheduled run then brings
-  the spend for 2026-11-19, the go-live day, so CPB for the period since go-live is a real number instead of
-  "spend not published yet". It also adds a scheduled (not hand-started) green run to the history.
+- **Recording on go-live day (2026-11-19).** Bookings exist only for 2026-11-19, and that day's spend file is
+  published tomorrow at 06:00 US Eastern. So CPB since go-live shows **"spend not published yet"**. That is correct
+  behaviour, and the script below says so. The first run started by the schedule is tomorrow at 07:00 Eastern.
+- **Refresh the numbers first (about 14 minutes):** 13 marketing bookings have arrived since the last run
+  (facebook 2, youtube 6, tiktok 5), but Gold still has 1 per channel. Start one run, and record sections 1-4 while it runs:
+  ```bash
+  aws stepfunctions start-execution --region us-west-1 --state-machine-arn "$(aws cloudformation describe-stacks --stack-name CalendlyInsights --region us-west-1 --query "Stacks[0].Outputs[?OutputKey=='StateMachineArn'].OutputValue" --output text)"
+  ```
+  Before section 5, check that it is green in tab 8, and press **R** in the dashboard (or restart it) so the dashboard
+  doesn't show its 10-minute cached data.
 - Start the dashboard, then open all tabs in one go (the script reads the names from the deployed stack):
   ```bash
   cd ~/Documents/DataEngineerBootcamp/Projects/Calendly_Marketing_Insights && source .venv/bin/activate
@@ -183,7 +190,11 @@ one per metric. Each table has its `_delta_log` folder: that's what makes MERGE 
 
 "Athena is the data warehouse you chose. It runs SQL straight on the Gold tables in S3; nothing is copied.
 This query adds up spend and bookings per channel since the webhook went live, and divides them.
-Facebook: [fill: $ CPB]; YouTube: [fill: $ CPB]; TikTok: [fill: $ CPB].
+The bookings are here: [fill: facebook N, youtube N, tiktok N]. The spend column is still empty,
+because the webhook went live today, and today's spend file is only published tomorrow morning at 6.
+So there's no cost per booking yet, and the query doesn't make one up. Tomorrow's 7 AM run fills it in.
+To show the formula working, over the whole 60 days of spend Facebook's cost works out to 35,942 dollars
+for a single test booking. Real numbers, but not meaningful yet, for the reason I'll explain now.
 
 Remember the rule from the design: cost per booking is always total spend divided by total bookings
 for the period, never an average of daily numbers.
@@ -195,8 +206,10 @@ it becomes meaningful as bookings build up, and for any period after the go-live
 [Show] Tab 12, Streamlit dashboard, top of the page.
 
 "Now the dashboard, in Streamlit. At the top: the period and the channels you want to look at.
-I've set the period to the days since go-live. Below that, three headline numbers: [fill: N] booked calls, [fill: $] ad spend,
-and an average cost per booking of [fill: $]."
+I've set the period to the days since go-live, which is just today. Below that, three headline numbers:
+[fill: N] booked calls, ad spend 'not published yet', and cost per booking 'spend not published yet'.
+Each day's spend file comes out the next morning at 6, so the dashboard says so,
+instead of pretending the bookings were free."
 
 *(scroll through the panels, one sentence each)*
 
@@ -215,12 +228,12 @@ spend only exists per channel, so cost per booking is shown per channel, not per
 
 1.6: meeting load: for each employee, marketing meetings divided by the number of weeks in the period."
 
-*(set the period to today only for a moment)*
+*(set the period to the full range for a moment: spend and CPB now show numbers, then set it back to today)*
 
-"For today, the spend shows 'not published yet'. Each day's spend file comes out the next morning at 6,
-so the dashboard says so, instead of pretending the bookings were free."
+"Over the full range you can see real spend. And the cost per booking is huge, as expected, because 60 days of spend
+are divided by one day of bookings."
 
-*(set the period back, then open one "Show data table" expander)*
+*(open one "Show data table" expander)*
 
 "Every chart has its data table underneath, so the exact numbers are always one click away."
 
@@ -294,7 +307,7 @@ Every decision and its reason is also logged in `docs/decisions.md`."
 spend files are copied every morning, one Spark job builds the Delta Lake every day at 7,
 it checks its own data, alerts me when something breaks, re-runs safely, and the dashboard shows all six metrics.
 
-The pipeline is running on its daily schedule now. All the deploy, check and teardown steps are in the runbook.
+The pipeline is on its daily schedule now; the first scheduled run is tomorrow at 7 AM Eastern, and it brings in today's spend. All the deploy, check and teardown steps are in the runbook.
 
 Thank you for watching."
 
@@ -312,7 +325,7 @@ Thank you for watching."
 | What if a spend figure is corrected later? | Every run re-reads the index; for each day and channel the newest file wins in Silver, and Gold is recalculated. |
 | Why is 1.5 (time slot) not filtered by the date range? | Its Gold table is grouped by weekday and hour only, as in the approved data model. Adding a date column is a small change if you want the filter. |
 | How do you know the numbers are right? | Gold equals a hand calculation on sample data (tests), data-quality checks on every run (no rows lost Silver → Gold, no negative spend, known channels only), and your test bookings end to end. |
-| What does it cost? | Pay per use. A few minutes of EMR Serverless per day, Lambda and API calls in the free-tier range, plus small fixed monthly charges for the KMS key and the secret. Measured: one daily run billed 0.21 vCPU-hours on EMR, about 1 cent; total about $2 a month including the key and secret. [fill: confirm in Cost Explorer] |
+| What does it cost? | Pay per use. A few minutes of EMR Serverless per day, Lambda and API calls in the free-tier range, plus small fixed monthly charges for the KMS key and the secret. Measured: one daily run billed 0.21 vCPU-hours on EMR, about 1 cent; total about $2 a month including the key and secret. |
 | How is the signing key changed? | `aws secretsmanager put-secret-value`; the Lambda picks up the new key within 5 minutes, no redeploy. |
 | Where does the dashboard run? | Locally against Athena today, as agreed in the design; hosting on AWS is a separate decision. |
 | What if a fourth channel is added? | One line in `channels.py` (event type → channel), then deploy. No table changes. |
