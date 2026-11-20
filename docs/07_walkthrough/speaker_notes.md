@@ -132,6 +132,7 @@ and copies every listed file into this folder.
 
 The first time it ran, it copied all 30 files. When I ran it again straight away, it copied zero
 and skipped 30, because it only copies what we don't have yet. So running it twice never creates duplicates.
+This morning's scheduled run copied just the one new file, so the folder now has 31.
 
 And since each file holds the last 30 days, if one morning is ever missed, the next run fills the gap by itself."
 
