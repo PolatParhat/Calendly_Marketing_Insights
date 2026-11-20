@@ -17,17 +17,39 @@ Numbers marked **[fill: …]** come from your own deployed run; write them in be
 - In the dashboard, set the **period to the days that have bookings** (bookings start when the webhook went live,
   2026-11-19; no backfill). Over the full 60 days of spend the CPB looks huge, because 60 days of spend are divided
   by a few days of bookings.
-- Open these tabs, in this order (GitHub on branch `main`; AWS console in **US West (N. California) / us-west-1**):
+- **Record on or after 2026-11-20, after 07:15 US Eastern (04:15 your time).** The 07:00 scheduled run then brings
+  the spend for 2026-11-19, the go-live day, so CPB for the period since go-live is a real number instead of
+  "spend not published yet". It also adds a scheduled (not hand-started) green run to the history.
+- Start the dashboard, then open all tabs in one go (the script reads the names from the deployed stack):
+  ```bash
+  cd ~/Documents/DataEngineerBootcamp/Projects/Calendly_Marketing_Insights && source .venv/bin/activate
+  AWS_REGION=us-west-1 streamlit run dashboard/app.py      # leave running; new terminal for the next line
+  bash scripts/open_recording_tabs.sh
+  ```
+  Log in to the AWS console first, so the AWS tabs load straight away.
+- In the Athena tab, paste this query (CPB since go-live) and run it once before recording:
+  ```sql
+  SELECT channel,
+         SUM(spend_usd)                                        AS spend_usd,
+         SUM(bookings)                                         AS bookings,
+         ROUND(SUM(spend_usd) / NULLIF(SUM(bookings), 0), 2)  AS cpb_usd
+  FROM calendly_gold.daily_spend_bookings_by_channel
+  WHERE date >= DATE '2026-11-19'
+  GROUP BY channel
+  ORDER BY cpb_usd;
+  ```
+- The tabs, in this order (GitHub on branch `main`; AWS console in **US West (N. California) / us-west-1**):
   1. GitHub: repo front page (`README.md`)
   2. GitHub: `docs/02_design/architecture.png` (zoom so the whole diagram fills the screen)
   3. AWS: CloudFormation → Stacks → `CalendlyInsights` → **Resources** tab
   4. AWS: API Gateway → APIs → `WebhookApi` → Routes (shows `POST /webhook`)
-  5. AWS: Lambda → Functions (search `CalendlyInsights`: Webhook, SpendCopy, RetryReplay)
-  6. AWS: S3 → the `calendlyinsights-lakebucket…` bucket (top level: `landing/ bronze/ silver/ gold/`)
+  5. AWS: Lambda → Functions (search `CalendlyInsights`: Webhook, SpendCopy, RetryReplay, plus two CDK helper
+     functions, `CustomS3AutoDeleteObjects…` and `CustomCDKBucketDeployment…`)
+  6. AWS: S3 → the `calendlyinsights-lakebucket…` bucket (top level: `athena-results/ bronze/ emr-logs/ gold/ landing/ silver/`)
   7. AWS: EventBridge → Scheduler → Schedules → `CalendlyInsights-DailySchedule…`
   8. AWS: Step Functions → State machines → `DailyWorkflow…` → Executions list
   9. AWS: EMR → EMR Serverless → Applications → `calendly-insights` → Job runs
-  10. AWS: Athena → Query editor, workgroup **calendly-insights**, the CPB query from runbook step 5 pasted in (run it once)
+  10. AWS: Athena → Query editor, workgroup **calendly-insights**, the go-live CPB query above pasted in (run it once)
   11. Your email inbox, filtered to the "Calendly Insights: daily run failed" alert (hide the address bar/sender line)
   12. Streamlit dashboard: `AWS_REGION=<region> streamlit run dashboard/app.py` → http://localhost:8501
   13. AWS: KMS → Customer managed keys → `alias/calendly-insights`
@@ -38,6 +60,9 @@ Numbers marked **[fill: …]** come from your own deployed run; write them in be
 - **Never show:** the signing key (never click "Retrieve secret value"), your AWS account number (top-right menu),
   the alert email address, any `.env` file, and no personal data: don't open real booking files under
   `landing/calendly/`, and never `SELECT *` from Silver (names, emails, phones). Gold has no personal data.
+- **Check the alert email arrived** (subject "Calendly Insights: daily run failed", sent 2026-11-19 09:35 your time).
+  If it is not in your inbox or spam, skip tab 11 and change the line in section 7 to
+  "and the alert step sent this message to the alert topic" while showing the green `SendFailureAlert` step.
 - Close Slack/email notifications; set browser zoom so text is readable. Practice once with a timer.
 
 ---
@@ -73,7 +98,7 @@ so bad data never reaches the dashboard."
 
 "None of this was clicked together in the console. It's all Python code with AWS CDK,
 and one command, `cdk deploy`, created everything you see in this list:
-the encrypted bucket, the KMS key, three Lambda functions, the queue, the secret, the API,
+the encrypted bucket, the KMS key, three Lambda functions (plus two small helpers CDK adds itself), the queue, the secret, the API,
 the EMR application, the workflow, the schedule, the alarms and the IAM roles.
 One command, `cdk destroy`, removes it again, except the data bucket and the key,
 which I keep on purpose, because booking data can't be fetched a second time."
@@ -132,7 +157,10 @@ Fourth, register the six Gold tables in the Glue Data Catalog, so Athena can fin
 Every step retries automatically with a growing pause. If it still fails, the whole run goes to this
 alert step, which emails me."
 
-[Show] Tab 9, EMR Serverless job runs; point at the successful run and its duration.
+[Show] Tab 9, EMR Serverless job runs; point at the newest successful run (09:36, about 5 minutes).
+The list has 8 runs: 2 green and 6 red. The red ones are the two early failures below,
+and each one tried the job 3 times (first try + 2 retries). The 08:54 red run is the last retry of the 08:46 run.
+It finished after the 08:52 green one, so don't let it confuse you on camera.
 
 "This is the Spark job itself. It took about five minutes. EMR Serverless starts the workers for the job and
 stops them five minutes after, so we pay only while it runs.
@@ -140,10 +168,11 @@ It's the same PySpark code I tested on my laptop: landing to Bronze, Bronze to S
 then the data-quality checks."
 
 "The first two runs on AWS did fail, and that's worth saying. EMR started more Spark workers by default than the
-limit I'd set, and Delta's Python library wasn't on the job's import path. Both were one-line settings,
-each fixed through a pull request with a new test, so they can't come back."
+limit I'd set, and Delta's Python library wasn't on the job's import path. Each failed run retried the job twice, which is why you see six red rows here.
+Both problems were one-line settings, each fixed through a pull request with a new test, so they can't come back."
 
-[Show] Tab 6, S3: open `bronze/`, `silver/`, `gold/` one after the other.
+[Show] Tab 6, S3: open `bronze/`, `silver/`, `gold/` one after the other. (`athena-results/` holds Athena's query
+output, and `emr-logs/` holds the Spark job logs.)
 
 "And here's the result: Delta tables in all three layers. Two in Bronze, three in Silver and six in Gold,
 one per metric. Each table has its `_delta_log` folder: that's what makes MERGE and time travel possible."
@@ -153,7 +182,7 @@ one per metric. Each table has its `_delta_log` folder: that's what makes MERGE 
 [Show] Tab 10, Athena, the CPB query and its result.
 
 "Athena is the data warehouse you chose. It runs SQL straight on the Gold tables in S3; nothing is copied.
-This query adds up spend and bookings per channel and divides them.
+This query adds up spend and bookings per channel since the webhook went live, and divides them.
 Facebook: [fill: $ CPB]; YouTube: [fill: $ CPB]; TikTok: [fill: $ CPB].
 
 Remember the rule from the design: cost per booking is always total spend divided by total bookings
@@ -225,8 +254,8 @@ The bucket refuses any request that isn't HTTPS, and public access is blocked."
 
 [Show] Tab 14, IAM roles.
 
-"Every part has its own IAM role with only what it needs. The webhook Lambda can read the signing key and write
-to one folder, `landing/calendly`, and nothing else. The spend Lambda can only touch `landing/spend`.
+"Every part has its own IAM role with only what it needs. The webhook Lambda can read the signing key, write
+to one folder, `landing/calendly`, and send to the retry queue, and nothing else. The spend Lambda can only touch `landing/spend`.
 The Spark job can read and write the lake but can't read the secret. The scheduler can only start the workflow.
 
 The personal data, names, emails and phone numbers, stays in Bronze and Silver.

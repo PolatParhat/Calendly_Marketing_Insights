@@ -20,11 +20,11 @@ Next: record the final walkthrough video with `docs/07_walkthrough/speaker_notes
   re-run SUCCEEDED with identical numbers. Full run ~14 min; EMR job ~5 min, ~1 cent per run.
 
 ## Next actions
-1. Merge the docs PR (this branch: docs/deploy-results).
-2. Record the final video (docs/07_walkthrough/speaker_notes.md). Set the dashboard period to days since go-live.
-3. After recording: decide whether to keep the stack running (≈ $2/month) or `cdk destroy` (runbook step 9;
+1. Record the final video on/after 2026-11-20 04:15 PT (after the 07:00 ET run brings 11-19 spend):
+   `bash scripts/open_recording_tabs.sh` opens all tabs; notes in docs/07_walkthrough/speaker_notes.md.
+2. After recording: decide whether to keep the stack running (≈ $2/month) or `cdk destroy` (runbook step 9;
    lake bucket + KMS key are retained and need manual deletion).
-4. Optional improvements: register Gold tables in parallel (each Athena DDL takes ~1 min via .sync);
+3. Optional improvements: register Gold tables in parallel (each Athena DDL takes ~1 min via .sync);
    add a date column to gold.bookings_by_time_slot so metric 1.5 can be filtered by period.
 
 ## Open items
