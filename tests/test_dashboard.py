@@ -101,3 +101,12 @@ def test_athena_rows_are_typed():
     assert df["spend_usd"].iloc[0] == 125.5 and pd.isna(df["spend_usd"].iloc[1])
     assert df["bookings"].tolist() == [2, 0]
     assert df["is_partial_week"].tolist() == [True, False]
+
+
+def test_time_slot_grid_keeps_every_weekday_from_gold(gold):
+    """1.5: the weekday names Silver writes must match the dashboard's order, or the grid comes out empty."""
+    slots = gold["bookings_by_time_slot"]
+    grid = metrics.time_slot_grid(slots)
+    assert len(grid) == slots["meeting_day_of_week"].nunique() > 0
+    assert int(grid.to_numpy().sum()) == int(slots["bookings"].sum())
+    assert list(grid.index) == [d for d in metrics.DAY_ORDER if d in set(grid.index)]
