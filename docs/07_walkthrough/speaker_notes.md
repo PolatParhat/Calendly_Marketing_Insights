@@ -3,30 +3,24 @@
 Recording length: about **15 minutes**. Read the lines in quotes in your own words; the **[Show]** lines say what is on screen.
 Record it **after** the stack is deployed and has run (runbook steps 2-7), and **before** any `cdk destroy`.
 Facts come from `README.md`, `docs/02_design/solution_design.md`, `docs/03_deploy/runbook.md` and `docs/decisions.md`.
-Numbers marked **[fill: …]** come from your own deployed run; write them in before you record.
+All numbers below were checked on AWS on 2026-11-19 at 20:35 PT, after the refresh run.
 
 ## Before you record
 
 - Merge the build PR first, so everything is on `main`, and check the PR's **Actions** checks are green.
 - Have done, in this order (runbook): deploy (2), test webhook (3), spend copy twice (4), one successful run (5),
   the forced failure + reload (6), so the history shows all of them. (Done 2026-11-19: one test booking per channel,
-  failed runs at 07:28, 08:46, 09:29, successful runs at 08:52 and 09:36 your time.)
-- Fill in the **[fill: …]** numbers on the day you record: the Athena CPB query (runbook 5) and the dashboard
-  headline numbers. They change as bookings arrive. Values on 2026-11-19 for reference: 1 booking per channel;
-  spend over all 60 days: facebook $35,942.40, youtube $36,270.12, tiktok $23,462.13.
+  failed runs at 07:28, 08:46, 09:29, successful runs at 08:52, 09:36 and 20:17 your time.)
+- Numbers as of 20:35 PT: 13 marketing bookings (facebook 2, youtube 6, tiktok 5); spend over all 60 days:
+  facebook $35,942.40, youtube $36,270.12, tiktok $23,462.13. If more bookings arrive before you record,
+  they only show after another run, so these numbers stay valid until then.
 - In the dashboard, set the **period to the days that have bookings** (bookings start when the webhook went live,
   2026-11-19; no backfill). Over the full 60 days of spend the CPB looks huge, because 60 days of spend are divided
   by a few days of bookings.
 - **Recording on go-live day (2026-11-19).** Bookings exist only for 2026-11-19, and that day's spend file is
   published tomorrow at 06:00 US Eastern. So CPB since go-live shows **"spend not published yet"**. That is correct
   behaviour, and the script below says so. The first run started by the schedule is tomorrow at 07:00 Eastern.
-- **Refresh the numbers first (about 14 minutes):** 13 marketing bookings have arrived since the last run
-  (facebook 2, youtube 6, tiktok 5), but Gold still has 1 per channel. Start one run, and record sections 1-4 while it runs:
-  ```bash
-  aws stepfunctions start-execution --region us-west-1 --state-machine-arn "$(aws cloudformation describe-stacks --stack-name CalendlyInsights --region us-west-1 --query "Stacks[0].Outputs[?OutputKey=='StateMachineArn'].OutputValue" --output text)"
-  ```
-  Before section 5, check that it is green in tab 8, and press **R** in the dashboard (or restart it) so the dashboard
-  doesn't show its 10-minute cached data.
+- The refresh run is done (20:17-20:31 PT, green). Restart the dashboard (or press **R**) so it isn't showing cached data.
 - Start the dashboard, then open all tabs in one go (the script reads the names from the deployed stack):
   ```bash
   cd ~/Documents/DataEngineerBootcamp/Projects/Calendly_Marketing_Insights && source .venv/bin/activate
@@ -34,7 +28,8 @@ Numbers marked **[fill: …]** come from your own deployed run; write them in be
   bash scripts/open_recording_tabs.sh
   ```
   Log in to the AWS console first, so the AWS tabs load straight away.
-- In the Athena tab, paste this query (CPB since go-live) and run it once before recording:
+- In the Athena tab, paste this query (**query A**, CPB since go-live) and run it once before recording.
+  **Query B** is the same query with the `WHERE` line deleted (the whole range); open it in a second editor tab (the **+**).
   ```sql
   SELECT channel,
          SUM(spend_usd)                                        AS spend_usd,
@@ -165,7 +160,7 @@ Every step retries automatically with a growing pause. If it still fails, the wh
 alert step, which emails me."
 
 [Show] Tab 9, EMR Serverless job runs; point at the newest successful run (09:36, about 5 minutes).
-The list has 8 runs: 2 green and 6 red. The red ones are the two early failures below,
+The list has 9 runs: 3 green and 6 red. The red ones are the two early failures below,
 and each one tried the job 3 times (first try + 2 retries). The 08:54 red run is the last retry of the 08:46 run.
 It finished after the 08:52 green one, so don't let it confuse you on camera.
 
@@ -186,28 +181,33 @@ one per metric. Each table has its `_delta_log` folder: that's what makes MERGE 
 
 ## 6. The numbers: Athena and the dashboard (7:30–10:30)
 
-[Show] Tab 10, Athena, the CPB query and its result.
+[Show] Tab 10, Athena: run **query A** (since go-live). Result (checked 2026-11-19 20:35 PT):
+tiktok 5, facebook 2, youtube 6 bookings; spend_usd and cpb_usd **empty**.
 
 "Athena is the data warehouse you chose. It runs SQL straight on the Gold tables in S3; nothing is copied.
-This query adds up spend and bookings per channel since the webhook went live, and divides them.
-The bookings are here: [fill: facebook N, youtube N, tiktok N]. The spend column is still empty,
-because the webhook went live today, and today's spend file is only published tomorrow morning at 6.
-So there's no cost per booking yet, and the query doesn't make one up. Tomorrow's 7 AM run fills it in.
-To show the formula working, over the whole 60 days of spend Facebook's cost works out to 35,942 dollars
-for a single test booking. Real numbers, but not meaningful yet, for the reason I'll explain now.
+This query adds up spend and bookings per channel since the webhook went live today, and divides them.
+The bookings are here: 2 from Facebook, 6 from YouTube and 5 from TikTok.
+The spend column is empty, because today's spend file is only published tomorrow morning at 6.
+So there's no cost per booking yet, and the query doesn't make one up. Tomorrow's 7 AM run fills it in."
 
-Remember the rule from the design: cost per booking is always total spend divided by total bookings
-for the period, never an average of daily numbers.
+[Show] Run **query B** (the same query without the `WHERE` line, so the whole range). Result:
+tiktok $23,462.13 / 5 = **$4,692.43**; youtube $36,270.12 / 6 = **$6,045.02**; facebook $35,942.40 / 2 = **$17,971.20**.
 
-One thing to keep in mind: bookings only start from the day the webhook went live, November 19th, because we agreed
-on no backfill. The spend files go back 60 days. So over the whole range, the cost per booking is far too high;
-it becomes meaningful as bookings build up, and for any period after the go-live date."
+"To show the formula working, here's the same query over the whole range. Total spend divided by total bookings:
+TikTok about 4,700 dollars per booking, YouTube about 6,000, Facebook about 18,000.
+
+These numbers are real but not meaningful yet. The spend goes back 60 days, and the bookings only start today,
+because we agreed on no backfill. So 60 days of spend are divided by one day of bookings.
+The numbers become meaningful as bookings build up, and for any period from the go-live date on.
+
+And remember the rule from the design: cost per booking is always total spend divided by total bookings
+for the period, never an average of daily numbers."
 
 [Show] Tab 12, Streamlit dashboard, top of the page.
 
 "Now the dashboard, in Streamlit. At the top: the period and the channels you want to look at.
 I've set the period to the days since go-live, which is just today. Below that, three headline numbers:
-[fill: N] booked calls, ad spend 'not published yet', and cost per booking 'spend not published yet'.
+13 booked calls, ad spend 'not published yet', and cost per booking 'spend not published yet'.
 Each day's spend file comes out the next morning at 6, so the dashboard says so,
 instead of pretending the bookings were free."
 
