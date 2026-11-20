@@ -3,24 +3,19 @@
 Recording length: about **15 minutes**. Read the lines in quotes in your own words; the **[Show]** lines say what is on screen.
 Record it **after** the stack is deployed and has run (runbook steps 2-7), and **before** any `cdk destroy`.
 Facts come from `README.md`, `docs/02_design/solution_design.md`, `docs/03_deploy/runbook.md` and `docs/decisions.md`.
-All numbers below were checked on AWS on 2026-11-19 at 20:35 PT, after the refresh run.
+All numbers below were checked on AWS on **2026-11-20 at 15:00 PT**, after the first scheduled run (04:00 PT, green).
 
 ## Before you record
 
 - Merge the build PR first, so everything is on `main`, and check the PR's **Actions** checks are green.
 - Have done, in this order (runbook): deploy (2), test webhook (3), spend copy twice (4), one successful run (5),
   the forced failure + reload (6), so the history shows all of them. (Done 2026-11-19: one test booking per channel,
-  failed runs at 07:28, 08:46, 09:29, successful runs at 08:52, 09:36 and 20:17 your time.)
-- Numbers as of 20:35 PT: 13 marketing bookings (facebook 2, youtube 6, tiktok 5); spend over all 60 days:
-  facebook $35,942.40, youtube $36,270.12, tiktok $23,462.13. If more bookings arrive before you record,
-  they only show after another run, so these numbers stay valid until then.
-- In the dashboard, set the **period to the days that have bookings** (bookings start when the webhook went live,
-  2026-11-19; no backfill). Over the full 60 days of spend the CPB looks huge, because 60 days of spend are divided
-  by a few days of bookings.
-- **Recording on go-live day (2026-11-19).** Bookings exist only for 2026-11-19, and that day's spend file is
-  published tomorrow at 06:00 US Eastern. So CPB since go-live shows **"spend not published yet"**. That is correct
-  behaviour, and the script below says so. The first run started by the schedule is tomorrow at 07:00 Eastern.
-- The refresh run is done (20:17-20:31 PT, green). Restart the dashboard (or press **R**) so it isn't showing cached data.
+  failed runs at 07:28, 08:46, 09:29, successful runs at 08:52, 09:36 and 20:17 your time; first scheduled run 2026-11-20 04:00, green.)
+- **The day to show is 2026-11-19, the go-live day.** It is the only day with both bookings and spend
+  (its spend file came this morning, brought in by the scheduled 04:00 PT run). On 2026-11-19: 14 marketing bookings
+  (facebook 3, youtube 6, tiktok 5) and $1,609.98 spend. Today (11-20) has 1 booking so far and no spend yet.
+  New bookings only appear after the next run, so these numbers stay valid until tomorrow's 04:00 PT run.
+- Restart the dashboard (Ctrl+C, then start it again) so it isn't showing cached data.
 - Start the dashboard, then open all tabs in one go (the script reads the names from the deployed stack):
   ```bash
   cd ~/Documents/DataEngineerBootcamp/Projects/Calendly_Marketing_Insights && source .venv/bin/activate
@@ -28,7 +23,7 @@ All numbers below were checked on AWS on 2026-11-19 at 20:35 PT, after the refre
   bash scripts/open_recording_tabs.sh
   ```
   Log in to the AWS console first, so the AWS tabs load straight away.
-- In the Athena tab, paste this query (**query A**, CPB since go-live) and run it once before recording.
+- In the Athena tab, paste this query (**query A**, CPB on the go-live day) and run it once before recording.
   **Query B** is the same query with the `WHERE` line deleted (the whole range); open it in a second editor tab (the **+**).
   ```sql
   SELECT channel,
@@ -36,7 +31,7 @@ All numbers below were checked on AWS on 2026-11-19 at 20:35 PT, after the refre
          SUM(bookings)                                         AS bookings,
          ROUND(SUM(spend_usd) / NULLIF(SUM(bookings), 0), 2)  AS cpb_usd
   FROM calendly_gold.daily_spend_bookings_by_channel
-  WHERE date >= DATE '2026-11-19'
+  WHERE date = DATE '2026-11-19'
   GROUP BY channel
   ORDER BY cpb_usd;
   ```
@@ -147,9 +142,10 @@ And since each file holds the last 30 days, if one morning is ever missed, the n
 "Every day at 7 AM US Eastern, one hour after the spend file is published,
 EventBridge Scheduler starts the daily workflow. The time zone is New York, so daylight saving is handled."
 
-[Show] Tab 8, Step Functions; open the successful execution and show the green graph.
+[Show] Tab 8, Step Functions; open the newest execution (2026-11-20 04:00 your time, green) and show the graph.
 
-"This is the workflow in Step Functions, and this is one successful run. The steps run in order:
+"This is the workflow in Step Functions, and this is this morning's run. Nobody started it: the schedule did,
+at 7 Eastern, and it went green. The steps run in order:
 
 First, replay anything waiting in the retry queue.
 Second, copy the spend files.
@@ -159,9 +155,10 @@ Fourth, register the six Gold tables in the Glue Data Catalog, so Athena can fin
 Every step retries automatically with a growing pause. If it still fails, the whole run goes to this
 alert step, which emails me."
 
-[Show] Tab 9, EMR Serverless job runs; point at the newest successful run (09:36, about 5 minutes).
-The list has 9 runs: 3 green and 6 red. The red ones are the two early failures below,
-and each one tried the job 3 times (first try + 2 retries). The 08:54 red run is the last retry of the 08:46 run.
+[Show] Tab 9, EMR Serverless job runs (or the terminal listing, if the console has no EMR Studio);
+point at the newest successful run (2026-11-20 04:00, about 5 minutes).
+The list has 10 runs: 4 green and 6 red. The red ones are the two early failures below,
+and each one tried the job 3 times (first try + 2 retries). The 08:54 red run (11-19) is the last retry of the 08:46 run.
 It finished after the 08:52 green one, so don't let it confuse you on camera.
 
 "This is the Spark job itself. It took about five minutes. EMR Serverless starts the workers for the job and
@@ -181,57 +178,61 @@ one per metric. Each table has its `_delta_log` folder: that's what makes MERGE 
 
 ## 6. The numbers: Athena and the dashboard (7:30–10:30)
 
-[Show] Tab 10, Athena: run **query A** (since go-live). Result (checked 2026-11-19 20:35 PT):
-tiktok 5, facebook 2, youtube 6 bookings; spend_usd and cpb_usd **empty**.
+[Show] Tab 10, Athena: run **query A** (the go-live day, 2026-11-19). Result:
+
+| channel | spend_usd | bookings | cpb_usd |
+|---|---|---|---|
+| tiktok_paid_ads | 360.34 | 5 | 72.07 |
+| youtube_paid_ads | 675.35 | 6 | 112.56 |
+| facebook_paid_ads | 574.29 | 3 | 191.43 |
 
 "Athena is the data warehouse you chose. It runs SQL straight on the Gold tables in S3; nothing is copied.
-This query adds up spend and bookings per channel since the webhook went live today, and divides them.
-The bookings are here: 2 from Facebook, 6 from YouTube and 5 from TikTok.
-The spend column is empty, because today's spend file is only published tomorrow morning at 6.
-So there's no cost per booking yet, and the query doesn't make one up. Tomorrow's 7 AM run fills it in."
+This query takes the go-live day, November 19th, adds up spend and bookings per channel, and divides them.
+TikTok is the cheapest: about 72 dollars per booked call. YouTube is about 113, and Facebook about 191.
+So on day one, TikTok gets us booked calls for the least money.
+It's one day of data, so that will move as bookings build up, but this is the answer to our question.
 
-[Show] Run **query B** (the same query without the `WHERE` line, so the whole range). Result:
-tiktok $23,462.13 / 5 = **$4,692.43**; youtube $36,270.12 / 6 = **$6,045.02**; facebook $35,942.40 / 2 = **$17,971.20**.
-
-"To show the formula working, here's the same query over the whole range. Total spend divided by total bookings:
-TikTok about 4,700 dollars per booking, YouTube about 6,000, Facebook about 18,000.
-
-These numbers are real but not meaningful yet. The spend goes back 60 days, and the bookings only start today,
-because we agreed on no backfill. So 60 days of spend are divided by one day of bookings.
-The numbers become meaningful as bookings build up, and for any period from the go-live date on.
-
-And remember the rule from the design: cost per booking is always total spend divided by total bookings
+Remember the rule from the design: cost per booking is always total spend divided by total bookings
 for the period, never an average of daily numbers."
 
-[Show] Tab 12, Streamlit dashboard, top of the page.
+[Show] Run **query B** (the same query without the `WHERE` line, the whole range). Result:
+tiktok $23,822.47 / 6 = $3,970.41; youtube $36,945.47 / 6 = $6,157.58; facebook $36,516.69 / 3 = $12,172.23.
+
+"And here's why the period matters. Over the whole range, the spend goes back 60 days, but the bookings only
+start at go-live, because we agreed on no backfill. So these numbers are far too high. That's why
+I always look at periods from the go-live date on."
+
+[Show] Tab 12, Streamlit dashboard. Set the period to **2026-11-19 → 2026-11-19** before you start talking.
 
 "Now the dashboard, in Streamlit. At the top: the period and the channels you want to look at.
-I've set the period to the days since go-live, which is just today. Below that, three headline numbers:
-13 booked calls, ad spend 'not published yet', and cost per booking 'spend not published yet'.
-Each day's spend file comes out the next morning at 6, so the dashboard says so,
-instead of pretending the bookings were free."
+I've set the period to the go-live day. Below that, three headline numbers: 14 booked calls,
+1,609 dollars and 98 cents of ad spend, and an average cost per booking of 115 dollars,
+the same numbers Athena just gave us."
 
 *(scroll through the panels, one sentence each)*
 
 "1.1: calls booked per day, one colour per channel, and the colour stays the same when you filter.
 
-1.2: cost per booking by channel. Lower is better. A channel that spent money but got no bookings
-shows 'no bookings' instead of dividing by zero.
+1.2: cost per booking by channel: TikTok 72, YouTube 113, Facebook 191 dollars. Lower is better.
+A channel that spent money but got no bookings would show 'no bookings' instead of dividing by zero.
 
 1.3: the trend: a running total for the period, and weekly totals. The faded bars are partial weeks
 at the edges of the data, so they don't look like a drop.
 
-1.4: the attribution leaderboard: bookings by channel and UTM campaign. As we agreed,
-spend only exists per channel, so cost per booking is shown per channel, not per campaign.
+1.4: the attribution leaderboard: bookings by channel and UTM campaign. Two Facebook bookings came with a UTM campaign
+from Instagram ads; the other 12 have none, so they show as 'Unknown', as we agreed. Spend only exists per channel, so cost per booking is shown per channel, not per campaign.
 
 1.5: when meetings take place: weekday against hour, in US Eastern time, using the meeting's start time.
 
 1.6: meeting load: for each employee, marketing meetings divided by the number of weeks in the period."
 
-*(set the period to the full range for a moment: spend and CPB now show numbers, then set it back to today)*
+*(set the period to today, 2026-11-20, for a moment)*
 
-"Over the full range you can see real spend. And the cost per booking is huge, as expected, because 60 days of spend
-are divided by one day of bookings."
+"For today: one booking so far, and the spend shows 'not published yet'. Today's spend file comes out
+tomorrow morning at 6, so the dashboard says so, instead of pretending the booking was free.
+Tomorrow's 7 o'clock run fills it in."
+
+*(set the period back to 2026-11-19)*
 
 *(open one "Show data table" expander)*
 
@@ -307,7 +308,7 @@ Every decision and its reason is also logged in `docs/decisions.md`."
 spend files are copied every morning, one Spark job builds the Delta Lake every day at 7,
 it checks its own data, alerts me when something breaks, re-runs safely, and the dashboard shows all six metrics.
 
-The pipeline is on its daily schedule now; the first scheduled run is tomorrow at 7 AM Eastern, and it brings in today's spend. All the deploy, check and teardown steps are in the runbook.
+The pipeline runs on its daily schedule: this morning's 7 AM Eastern run was the first one, and it went green. All the deploy, check and teardown steps are in the runbook.
 
 Thank you for watching."
 
