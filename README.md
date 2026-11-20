@@ -26,8 +26,8 @@ EventBridge Scheduler ─► Step Functions ─► EMR Serverless (PySpark)
 ```
 
 ## Build plan
-Steps 4-12 create AWS resources (SME approval received 2026-11-18). 🟡 = code written and tested
-locally; Polat runs the deploy with [the runbook](docs/03_deploy/runbook.md).
+Steps 4-12 create AWS resources (SME approval received 2026-11-18). Deployed and verified on AWS
+2026-11-19 (us-west-1) with [the runbook](docs/03_deploy/runbook.md).
 
 | Step | What | Done when | Status |
 |------|------|-----------|--------|
@@ -35,15 +35,15 @@ locally; Polat runs the deploy with [the runbook](docs/03_deploy/runbook.md).
 | 1 | Repo and skeleton: `src/`, `tests/`, `infra/`, venv, CI runs tests | PR shows green check | ✅ done |
 | 2 | Design + SME approval: draw.io diagram, Bronze/Silver/Gold data model, solution design doc | written SME approval in `docs/` | ✅ done |
 | 3 | Transformations locally: PySpark + Delta, landing → Bronze → Silver → Gold, 6 metrics | pytest passes; Gold matches hand calculation | ✅ done |
-| 4 | AWS foundation (CDK): KMS key, encrypted S3, IAM roles, SNS alert | buckets show SSE-KMS | 🟡 code done, deploy pending |
-| 5 | Webhook receiver: API Gateway + Lambda (signature check) + Secrets Manager + SQS retry queue | POST lands a file in `landing/` | 🟡 code done, deploy pending |
-| 6 | Spend ingestion Lambda (copies all files in `file_index.json`) | 30 files; re-run gives no duplicates | 🟡 code done, deploy pending |
-| 7 | Spark job on EMR Serverless on real S3 data | Delta tables in all 3 layers | 🟡 code done, deploy pending |
-| 8 | Scheduling + failure reload: EventBridge Scheduler → Step Functions, retries, alerts | forced failure alerts; re-run fixes it | 🟡 code done, deploy pending |
-| 9 | Warehouse: Glue Data Catalog + Athena over Gold | Athena returns CPB by channel | 🟡 code done, deploy pending |
-| 10 | Streamlit dashboard, 6 panels | runs locally on Athena data | 🟡 runs on local lake; Athena after deploy |
-| 11 | CI/CD complete: tests, lint, `cdk synth` on every PR | green checks on a real PR | 🟡 workflow written; green on the PR |
-| 12 | Submission: README, docs, configs, video, "why" per tool | requirements' Step 6 list ticked | 🟡 docs + video script done; record video after deploy |
+| 4 | AWS foundation (CDK): KMS key, encrypted S3, IAM roles, SNS alert | buckets show SSE-KMS | ✅ done |
+| 5 | Webhook receiver: API Gateway + Lambda (signature check) + Secrets Manager + SQS retry queue | POST lands a file in `landing/` | ✅ done |
+| 6 | Spend ingestion Lambda (copies all files in `file_index.json`) | 30 files; re-run gives no duplicates | ✅ done |
+| 7 | Spark job on EMR Serverless on real S3 data | Delta tables in all 3 layers | ✅ done |
+| 8 | Scheduling + failure reload: EventBridge Scheduler → Step Functions, retries, alerts | forced failure alerts; re-run fixes it | ✅ done |
+| 9 | Warehouse: Glue Data Catalog + Athena over Gold | Athena returns CPB by channel | ✅ done |
+| 10 | Streamlit dashboard, 6 panels | runs locally on Athena data | ✅ done |
+| 11 | CI/CD complete: tests, lint, `cdk synth` on every PR | green checks on a real PR | ✅ done |
+| 12 | Submission: README, docs, configs, video, "why" per tool | requirements' Step 6 list ticked | 🟡 docs done; record the video |
 
 ## Metrics
 Daily calls booked by source · Cost Per Booking (CPB) by channel · Bookings trend over time ·

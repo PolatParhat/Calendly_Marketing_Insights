@@ -60,12 +60,12 @@ Steps 4-12 create AWS resources: only after written SME approval (Step 2).
 | 1 | Repo and skeleton: GitHub repo, src/ tests/ infra/, venv, CI runs tests | PR shows green check | done |
 | 2 | Design + SME approval: draw.io diagram, Bronze/Silver/Gold data model, solution design doc | written SME approval in docs/ | done (approved 2026-11-18) |
 | 3 | Transformations locally: PySpark + Delta, landing→Bronze→Silver→Gold, 6 metrics | pytest passes; Gold = hand calc | done |
-| 4 | AWS foundation (CDK): KMS key, encrypted S3, IAM roles, SNS alert | buckets show SSE-KMS | code done, deploy pending |
-| 5 | Webhook receiver: API Gateway + Lambda (signature) + Secrets Manager + SQS retry queue; URL to SME | POST lands file in landing/ | code done, deploy pending |
-| 6 | Spend ingestion Lambda (copies all files in file_index.json) | 30 files; re-run = no dupes | code done, deploy pending |
-| 7 | Spark job on EMR Serverless on real S3 data | Delta tables in all 3 layers | code done, deploy pending |
-| 8 | Scheduling + failure reload: EventBridge Scheduler → Step Functions, retries, alerts | forced failure alerts; re-run fixes | code done, deploy pending |
-| 9 | Warehouse: Glue Data Catalog + Athena over Gold | Athena returns CPB by channel | code done, deploy pending |
-| 10 | Streamlit dashboard, 6 panels | runs locally on Athena data | runs on local lake; Athena after deploy |
-| 11 | CI/CD complete: tests, lint, cdk synth on every PR | green checks on a real PR | workflow written; green on PR |
-| 12 | Submission: README, docs, configs, video, "why" per tool | doc's Step 6 list ticked | docs + video script done; record after deploy |
+| 4 | AWS foundation (CDK): KMS key, encrypted S3, IAM roles, SNS alert | buckets show SSE-KMS | done (2026-11-19) |
+| 5 | Webhook receiver: API Gateway + Lambda (signature) + Secrets Manager + SQS retry queue; URL to SME | POST lands file in landing/ | done (2026-11-19) |
+| 6 | Spend ingestion Lambda (copies all files in file_index.json) | 30 files; re-run = no dupes | done (2026-11-19) |
+| 7 | Spark job on EMR Serverless on real S3 data | Delta tables in all 3 layers | done (2026-11-19) |
+| 8 | Scheduling + failure reload: EventBridge Scheduler → Step Functions, retries, alerts | forced failure alerts; re-run fixes | done (2026-11-19) |
+| 9 | Warehouse: Glue Data Catalog + Athena over Gold | Athena returns CPB by channel | done (2026-11-19) |
+| 10 | Streamlit dashboard, 6 panels | runs locally on Athena data | done (2026-11-19) |
+| 11 | CI/CD complete: tests, lint, cdk synth on every PR | green checks on a real PR | done (2026-11-19) |
+| 12 | Submission: README, docs, configs, video, "why" per tool | doc's Step 6 list ticked | docs done; video to record |

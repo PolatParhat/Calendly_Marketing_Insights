@@ -2,55 +2,52 @@
 Updated: 2026-11-19
 
 ## Where we are
-Steps 0-3 done and merged. **Steps 4-12: all code written and tested locally** on branch `build/steps-4-12`
-(PR open, see below). **Nothing is deployed to AWS yet.** Next: merge the PR, then Polat follows
-`docs/03_deploy/runbook.md` (bootstrap, deploy, checks, forced failure), then records the final video
-(`docs/07_walkthrough/speaker_notes.md`).
+**Deployed and running on AWS (us-west-1). Steps 0-11 done; Step 12 docs done, only the final video is left.**
+Daily schedule is live: EventBridge Scheduler starts the workflow every day at 07:00 America/New_York.
+Next: record the final walkthrough video with `docs/07_walkthrough/speaker_notes.md`
+(fill the [fill: …] numbers on the recording day), then submit.
 
-## Done this session (branch build/steps-4-12)
-- Lambdas (`lambdas/`): webhook.py (Calendly HMAC-SHA256 signature, 180 s max age, S3 landing, SQS retry on failure,
-  500 if both fail), retry_replay.py, spend_copy.py (file_index.json, skip already copied, dt = publish day).
-- `quality.py` data-quality checks, called at the end of `pipeline.run()`; `jobs/run_pipeline.py` EMR entry point.
-- `infra/`: CDK app, one stack `CalendlyInsights` (KMS, 2 S3 buckets, SNS, API Gateway HTTP API, 3 Lambdas, SQS,
-  Secrets Manager, EMR Serverless emr-spark-8.2.0 ARM64, Glue db `calendly_gold`, Athena workgroup
-  `calendly-insights`, Step Functions `DailyWorkflow`, Scheduler 07:00 America/New_York, 3 alarms). infra/tests.
-- `dashboard/`: Streamlit app (6 panels + KPIs), metrics.py, data_source.py (athena | local).
-- CI: test job installs dashboard + infra libs; new `cdk-synth` job.
-- Docs: runbook, final walkthrough speaker notes, README (layout, run, why each tool), decisions.
-- Verified locally: `pytest -q` 64 passed; `ruff check .` clean; `cdk synth` OK; Streamlit AppTest on the local
-  lake: no exceptions, KPIs 4 calls / $725.50 / CPB $181.38. Headless-Chrome screenshot came out blank (Streamlit
-  needs a live browser), so the visual layout was not checked by Claude.
+## Done this session (2026-11-19)
+- PR #10: all Steps 4-12 code (CDK stack, 3 Lambdas, quality checks, EMR entry, Streamlit, CI cdk synth, runbook,
+  walkthrough script). PRs #11-#13: fixes found on the first real runs (EMR initialExecutors, Delta jar in
+  pyFiles, dashboard "spend not published yet").
+- Deploy: cdk bootstrap + deploy (stack `CalendlyInsights`); alert email confirmed.
+- Webhook: SME created the subscription (organization scope, invitee.created + invitee.canceled); signing key stored
+  in Secrets Manager; real deliveries saved; 1 test booking per channel.
+- Spend copy: 30 files, re-run copies 0. First successful run 08:52 PT (Bronze 2, Silver 3, Gold 6, 6 Glue tables).
+- Athena CPB (all 60 days of spend / 1 booking each): facebook 35942.40, youtube 36270.12, tiktok 23462.13.
+- Forced failure: spend URL broken → 2 retries → SendFailureAlert → FAILED (6 min); restored + drift IN_SYNC →
+  re-run SUCCEEDED with identical numbers. Full run ~14 min; EMR job ~5 min, ~1 cent per run.
 
 ## Next actions
-1. Polat merges the PR once CI is green (`! gh pr merge <n> --merge`).
-2. Polat runs `docs/03_deploy/runbook.md` steps 0-7 (cdk bootstrap, cdk deploy -c alert_email=..., checks).
-3. Send the webhook URL to the SME; store their signing key (runbook step 3); ask for 1 test booking per channel.
-4. Forced failure test (runbook step 6), then fill the [fill: …] numbers in the walkthrough notes and record.
-5. Then mark Steps 4-12 done in README + CLAUDE.md tables.
+1. Merge the docs PR (this branch: docs/deploy-results).
+2. Record the final video (docs/07_walkthrough/speaker_notes.md). Set the dashboard period to days since go-live.
+3. After recording: decide whether to keep the stack running (≈ $2/month) or `cdk destroy` (runbook step 9;
+   lake bucket + KMS key are retained and need manual deletion).
+4. Optional improvements: register Gold tables in parallel (each Athena DDL takes ~1 min via .sync);
+   add a date column to gold.bookings_by_time_slot so metric 1.5 can be filtered by period.
 
-## Open items / risks
-- First EMR run confirms the Delta jar path (`DELTA_JARS` in stack.py); fix described in runbook "Known risks".
-- Athena Delta registration runs only after the first successful Spark run.
+## Open items
 - SME approval message text still "_to paste_" in docs/01_sme/sme_questions.md (approval received 2026-11-18).
+- Confirm the forced-failure alert email arrived (workflow's SendFailureAlert step succeeded 09:35 PT).
 - User's practice files test.py and webhook_demo.py untracked in project root; do not commit them.
-- Merging PRs from Claude is blocked by the auto-mode permission check: the user merges.
+- A separate Claude session may be writing the tutorial book in ~/Documents/DataEngineerBootcamp/Books/CalendlyMarketingInsights.
 
 ## Environment gotchas
-- AWS CLI user `polat-admin`, default region **us-west-1** (stack deploys there unless AWS_REGION is set).
-- Shell profile sets JAVA_HOME to **Java 11**; `spark.py` forces Java 17 on macOS. Venv `.venv` = Python 3.11.9.
-- delta-spark 4.2.0 requires pyspark<=4.1.1 (EMR has 4.1.3; same minor).
+- AWS CLI user `polat-admin`, region **us-west-1**. Stack outputs: use the `out()` helper in docs/03_deploy/runbook.md.
+- `cdk deploy` must always include `-c alert_email=<address>`, or the email subscription is removed.
+- Dashboard: `AWS_REGION=us-west-1 streamlit run dashboard/app.py`; first load ~10-20 s (6 Athena queries), cached 10 min.
+- `aws stepfunctions list-executions --max-items` prints a trailing "None" token in text output; use `--max-results`.
+- Shell profile sets JAVA_HOME to Java 11; `spark.py` forces Java 17 on macOS. Venv `.venv` = Python 3.11.9.
 - Ad-hoc scripts need `PYTHONPATH=src`; pytest gets src, lambdas, dashboard, infra, scripts from pyproject.toml.
-- Run `cdk` from `infra/` with the venv active (cdk.json runs `python3 app.py`).
-- `collect()` returns timestamps in local zone; tests force TZ=UTC in conftest.py.
-- `.text(path, wholetext=True)`: pass wholetext as an argument, not `.option`.
-- Streamlit: `use_container_width` is deprecated → `width="stretch"`.
-- gh CLI logged in as PolatParhat (https). Repo is PRIVATE.
+- Run `cdk` from `infra/` with the venv active. gh CLI logged in as PolatParhat; repo is PRIVATE.
+- Streamlit headless screenshots come out blank; use streamlit.testing AppTest for automated checks.
 
 ## Key facts to keep straight
 - SME rules: booking date = payload.created_at; US Eastern; channel from event_type; campaign = utm_campaign else
   "Unknown"; time slot = meeting start_time; meeting load = marketing only, by week of start_time; heatmap = bookings
   by channel x campaign, CPB per channel only; no cancellations, no backfill; Athena.
-- CPB = total spend ÷ total bookings for the period. Gold stores sums/counts only; missing spend = null. Gold has no PII.
-- Webhook failures go to an SQS **retry queue**, replayed by the first workflow step.
+- CPB = total spend ÷ total bookings for the period; unknown spend is never 0. Gold has no PII.
+- Bookings start 2026-11-19 (webhook go-live); spend goes back 60 days, so full-range CPB is not meaningful yet.
 - Speaker notes are ALWAYS for a recorded video; format = docs/02_design/speaker_notes.md.
 - Keep the README "Build plan" table in sync with CLAUDE.md whenever a step's status changes.

@@ -135,3 +135,12 @@ Received 2026-11-16. SME reply (verbatim):
 ## Design approval
 - 2026-11-18: the SME **approved** the architecture and data model after the recorded design walkthrough video.
 - SME message (verbatim): _to paste_
+
+---
+
+## Webhook handover (2026-11-19)
+- Sent the SME the webhook URL (POST): `https://gksw7fbm29.execute-api.us-west-1.amazonaws.com/webhook`.
+- SME created the subscription: scope `organization`, state `active`, events `invitee.created` and `invitee.canceled`
+  (canceled is acknowledged and not stored; cancellations are out of scope).
+- SME sent the signing key; stored only in AWS Secrets Manager (2026-11-19 14:23 UTC). First real deliveries saved
+  from 14:49 UTC; one test booking made on each of the 3 marketing event types (agreed by the SME on 2026-11-16).

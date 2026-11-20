@@ -9,10 +9,15 @@ Numbers marked **[fill: …]** come from your own deployed run; write them in be
 
 - Merge the build PR first, so everything is on `main`, and check the PR's **Actions** checks are green.
 - Have done, in this order (runbook): deploy (2), test webhook (3), spend copy twice (4), one successful run (5),
-  the forced failure + reload (6), so the history shows all of them. Ask the SME for one test booking per channel
-  (facebook, youtube, tiktok) **before** run (5), so the dashboard has real marketing bookings.
-- Fill in the **[fill: …]** numbers: Athena CPB query (runbook 5) and the dashboard headline numbers.
-- Open these tabs, in this order (GitHub on branch `main`; AWS console in the region you deployed to):
+  the forced failure + reload (6), so the history shows all of them. (Done 2026-11-19: one test booking per channel,
+  failed runs at 07:28, 08:46, 09:29, successful runs at 08:52 and 09:36 your time.)
+- Fill in the **[fill: …]** numbers on the day you record: the Athena CPB query (runbook 5) and the dashboard
+  headline numbers. They change as bookings arrive. Values on 2026-11-19 for reference: 1 booking per channel;
+  spend over all 60 days: facebook $35,942.40, youtube $36,270.12, tiktok $23,462.13.
+- In the dashboard, set the **period to the days that have bookings** (bookings start when the webhook went live,
+  2026-11-19; no backfill). Over the full 60 days of spend the CPB looks huge, because 60 days of spend are divided
+  by a few days of bookings.
+- Open these tabs, in this order (GitHub on branch `main`; AWS console in **US West (N. California) / us-west-1**):
   1. GitHub: repo front page (`README.md`)
   2. GitHub: `docs/02_design/architecture.png` (zoom so the whole diagram fills the screen)
   3. AWS: CloudFormation → Stacks → `CalendlyInsights` → **Resources** tab
@@ -129,10 +134,14 @@ alert step, which emails me."
 
 [Show] Tab 9, EMR Serverless job runs; point at the successful run and its duration.
 
-"This is the Spark job itself. It took [fill: minutes] minutes. EMR Serverless starts the workers for the job and
+"This is the Spark job itself. It took about five minutes. EMR Serverless starts the workers for the job and
 stops them five minutes after, so we pay only while it runs.
 It's the same PySpark code I tested on my laptop: landing to Bronze, Bronze to Silver, Silver to Gold,
 then the data-quality checks."
+
+"The first two runs on AWS did fail, and that's worth saying. EMR started more Spark workers by default than the
+limit I'd set, and Delta's Python library wasn't on the job's import path. Both were one-line settings,
+each fixed through a pull request with a new test, so they can't come back."
 
 [Show] Tab 6, S3: open `bronze/`, `silver/`, `gold/` one after the other.
 
@@ -148,12 +157,16 @@ This query adds up spend and bookings per channel and divides them.
 Facebook: [fill: $ CPB]; YouTube: [fill: $ CPB]; TikTok: [fill: $ CPB].
 
 Remember the rule from the design: cost per booking is always total spend divided by total bookings
-for the period, never an average of daily numbers."
+for the period, never an average of daily numbers.
+
+One thing to keep in mind: bookings only start from the day the webhook went live, November 19th, because we agreed
+on no backfill. The spend files go back 60 days. So over the whole range, the cost per booking is far too high;
+it becomes meaningful as bookings build up, and for any period after the go-live date."
 
 [Show] Tab 12, Streamlit dashboard, top of the page.
 
 "Now the dashboard, in Streamlit. At the top: the period and the channels you want to look at.
-Below that, three headline numbers: [fill: N] booked calls, [fill: $] ad spend,
+I've set the period to the days since go-live. Below that, three headline numbers: [fill: N] booked calls, [fill: $] ad spend,
 and an average cost per booking of [fill: $]."
 
 *(scroll through the panels, one sentence each)*
@@ -173,7 +186,12 @@ spend only exists per channel, so cost per booking is shown per channel, not per
 
 1.6: meeting load: for each employee, marketing meetings divided by the number of weeks in the period."
 
-*(open one "Show data table" expander)*
+*(set the period to today only for a moment)*
+
+"For today, the spend shows 'not published yet'. Each day's spend file comes out the next morning at 6,
+so the dashboard says so, instead of pretending the bookings were free."
+
+*(set the period back, then open one "Show data table" expander)*
 
 "Every chart has its data table underneath, so the exact numbers are always one click away."
 
@@ -182,7 +200,8 @@ spend only exists per channel, so cost per booking is shown per channel, not per
 [Show] Tab 8, Step Functions executions list; open the failed execution, show the red step.
 
 "The requirements ask for a failure reload mechanism, so I tested one on purpose.
-I pointed the spend Lambda at a folder that doesn't exist. The run retried twice, then stopped here, in red."
+I pointed the spend Lambda at a folder that doesn't exist. The step failed, was retried after two minutes,
+again after four more, and then the run stopped here, in red, six minutes after it started."
 
 [Show] Tab 11, the alert email (hide the address).
 
@@ -190,7 +209,8 @@ I pointed the spend Lambda at a folder that doesn't exist. The run retried twice
 
 [Show] Tab 8, the next execution, green.
 
-"To fix it, I ran `cdk deploy` again, which puts the correct settings back, and started the run again.
+"To fix it, I put the correct setting back, and CloudFormation's drift check confirmed it matches the code again.
+Then I started the run again.
 It went through, and the Athena numbers were exactly the same as before.
 That's because every table is written with a Delta MERGE: rows that already exist are updated, not added again.
 So re-running after a failure is always safe."
@@ -263,7 +283,7 @@ Thank you for watching."
 | What if a spend figure is corrected later? | Every run re-reads the index; for each day and channel the newest file wins in Silver, and Gold is recalculated. |
 | Why is 1.5 (time slot) not filtered by the date range? | Its Gold table is grouped by weekday and hour only, as in the approved data model. Adding a date column is a small change if you want the filter. |
 | How do you know the numbers are right? | Gold equals a hand calculation on sample data (tests), data-quality checks on every run (no rows lost Silver → Gold, no negative spend, known channels only), and your test bookings end to end. |
-| What does it cost? | Pay per use. A few minutes of EMR Serverless per day, Lambda and API calls in the free-tier range, plus small fixed monthly charges for the KMS key and the secret. [fill: cost from Billing → Cost Explorer after a few days] |
+| What does it cost? | Pay per use. A few minutes of EMR Serverless per day, Lambda and API calls in the free-tier range, plus small fixed monthly charges for the KMS key and the secret. Measured: one daily run billed 0.21 vCPU-hours on EMR, about 1 cent; total about $2 a month including the key and secret. [fill: confirm in Cost Explorer] |
 | How is the signing key changed? | `aws secretsmanager put-secret-value`; the Lambda picks up the new key within 5 minutes, no redeploy. |
 | Where does the dashboard run? | Locally against Athena today, as agreed in the design; hosting on AWS is a separate decision. |
 | What if a fourth channel is added? | One line in `channels.py` (event type → channel), then deploy. No table changes. |

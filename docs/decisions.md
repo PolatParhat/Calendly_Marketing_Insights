@@ -49,6 +49,12 @@
 | 2026-11-19 | Workflow: Parallel wrapper with one Catch → SNS email; each step 2 retries with back-off; 2 h timeout + alarm | One alert path for every step |
 | 2026-11-19 | Dashboard reads Gold via **Athena (boto3)** or a **local lake (Spark)**; metric 1.5 shows all-to-date (its Gold table has no date) | Local mode lets the dashboard be tested and demoed without AWS |
 | 2026-11-19 | CI: second job runs **`cdk synth`** with a placeholder account; test job installs dashboard + infra libs | Step 11: broken infrastructure code fails the PR |
+| 2026-11-19 | Deployed to **us-west-1** (the AWS CLI default region) | Spend files are fetched over HTTPS from us-east-1, which works from any region; no reason to move |
+| 2026-11-19 | EMR Spark settings: **`spark.dynamicAllocation.initialExecutors=1`** (PR #11) | EMR Serverless starts 3 executors by default, above our cap of 2; job was rejected before starting |
+| 2026-11-19 | **Delta jar in `spark.submit.pyFiles`** (PR #12) | Delta's Python API ships inside the EMR Delta jar; without it `No module named 'delta'` |
+| 2026-11-19 | Dashboard: unknown spend shown as **"spend not published yet"**, never $0 (PR #13) | Today's spend file comes tomorrow 06:00; summing nulls as 0 showed free bookings |
+| 2026-11-19 | Webhook subscription created by the SME with scope organization and events `invitee.created` + `invitee.canceled`; canceled events are acknowledged (200) and not stored | Cancellations out of scope (SME 2026-11-16); 200 stops Calendly retrying them |
+| 2026-11-19 | Forced-failure test restores the Lambda setting with `update-function-configuration` + drift check instead of `cdk deploy` | Same result; a `cdk deploy` without `-c alert_email` would remove the email subscription |
 
 ## Change log
 - 2026-11-14: Project scaffold created; requirements PDF moved to docs/00_requirements/ with text copy and diagrams.
@@ -62,3 +68,4 @@
 - 2026-11-19: Step 1 merged (PR #7, green CI). Step 3 started on branch step3/local-transformations: Spark+Delta setup, sample data, Bronze load (11 tests pass).
 - 2026-11-19: Step 3 done: Silver (bookings 4, booking_hosts 5, spend_daily 9), Gold 6 tables, pipeline.py run script, CI with Java 17 (32 tests). PR #8 merged (ca08946).
 - 2026-11-19: Steps 4-12 code written on branch build/steps-4-12: CDK stack, 3 Lambdas, data-quality checks, EMR entry point, Streamlit dashboard, CI cdk synth, runbook, final walkthrough video script. 64 tests pass locally; nothing deployed yet (user runs docs/03_deploy/runbook.md).
+- 2026-11-19: Deployed to AWS (us-west-1). Webhook live (SME created the subscription, signing key stored); spend copy 30 files; first two runs failed (EMR executors, delta import), fixed in PRs #11-#12; run SUCCEEDED (Bronze 2, Silver 3, Gold 6, Athena CPB); dashboard on Athena (PR #13 unknown spend); forced failure alerted and re-run gave identical numbers. Steps 4-11 done.
