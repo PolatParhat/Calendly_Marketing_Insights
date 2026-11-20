@@ -56,7 +56,7 @@ jobs/run_pipeline.py     entry point EMR Serverless runs (package shipped as cal
 lambdas/                 webhook.py (receiver), retry_replay.py (SQS replay), spend_copy.py (spend files)
 infra/                   AWS CDK app: calendly_infra/stack.py = every AWS resource; infra/tests/
 dashboard/               Streamlit app.py, metrics.py (dashboard maths), data_source.py (Athena / local)
-scripts/                 send_test_webhook.py (signed test POST to the deployed webhook)
+scripts/                 send_test_webhook.py (signed test POST), open_recording_tabs.sh (video tabs)
 tests/                   pytest: Spark layers vs hand calculation, Lambdas with fake AWS clients, dashboard
 docs/                    requirements, SME Q&A, design, runbook, walkthrough video script, decisions
 ```

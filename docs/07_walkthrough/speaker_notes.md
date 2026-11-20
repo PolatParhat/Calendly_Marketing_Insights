@@ -17,7 +17,28 @@ Numbers marked **[fill: …]** come from your own deployed run; write them in be
 - In the dashboard, set the **period to the days that have bookings** (bookings start when the webhook went live,
   2026-11-19; no backfill). Over the full 60 days of spend the CPB looks huge, because 60 days of spend are divided
   by a few days of bookings.
-- Open these tabs, in this order (GitHub on branch `main`; AWS console in **US West (N. California) / us-west-1**):
+- **Record on or after 2026-11-20, after 07:15 US Eastern (04:15 your time).** The 07:00 scheduled run then brings
+  the spend for 2026-11-19, the go-live day, so CPB for the period since go-live is a real number instead of
+  "spend not published yet". It also adds a scheduled (not hand-started) green run to the history.
+- Start the dashboard, then open all tabs in one go (the script reads the names from the deployed stack):
+  ```bash
+  cd ~/Documents/DataEngineerBootcamp/Projects/Calendly_Marketing_Insights && source .venv/bin/activate
+  AWS_REGION=us-west-1 streamlit run dashboard/app.py      # leave running; new terminal for the next line
+  bash scripts/open_recording_tabs.sh
+  ```
+  Log in to the AWS console first, so the AWS tabs load straight away.
+- In the Athena tab, paste this query (CPB since go-live) and run it once before recording:
+  ```sql
+  SELECT channel,
+         SUM(spend_usd)                                        AS spend_usd,
+         SUM(bookings)                                         AS bookings,
+         ROUND(SUM(spend_usd) / NULLIF(SUM(bookings), 0), 2)  AS cpb_usd
+  FROM calendly_gold.daily_spend_bookings_by_channel
+  WHERE date >= DATE '2026-11-19'
+  GROUP BY channel
+  ORDER BY cpb_usd;
+  ```
+- The tabs, in this order (GitHub on branch `main`; AWS console in **US West (N. California) / us-west-1**):
   1. GitHub: repo front page (`README.md`)
   2. GitHub: `docs/02_design/architecture.png` (zoom so the whole diagram fills the screen)
   3. AWS: CloudFormation → Stacks → `CalendlyInsights` → **Resources** tab
@@ -153,7 +174,7 @@ one per metric. Each table has its `_delta_log` folder: that's what makes MERGE 
 [Show] Tab 10, Athena, the CPB query and its result.
 
 "Athena is the data warehouse you chose. It runs SQL straight on the Gold tables in S3; nothing is copied.
-This query adds up spend and bookings per channel and divides them.
+This query adds up spend and bookings per channel since the webhook went live, and divides them.
 Facebook: [fill: $ CPB]; YouTube: [fill: $ CPB]; TikTok: [fill: $ CPB].
 
 Remember the rule from the design: cost per booking is always total spend divided by total bookings
