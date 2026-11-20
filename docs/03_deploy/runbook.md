@@ -93,7 +93,8 @@ Start the workflow now instead of waiting for 07:00 US Eastern:
 EXEC=$(aws stepfunctions start-execution --state-machine-arn $SM --query executionArn --output text)
 aws stepfunctions describe-execution --execution-arn $EXEC --query status --output text
 ```
-Repeat the second command every minute or so. The first EMR run takes ~5-8 minutes (the application starts up).
+Repeat the second command every minute or so. A full run takes **~14 minutes** (measured 2026-11-19): replay + spend
+copy 5 s, Spark step ~8 min (the job itself ~5 min, the rest is EMR start-up), registering the 6 Athena tables ~1 min each.
 Expected: `SUCCEEDED`. Watch it as a graph in the console: Step Functions → State machines → `DailyWorkflow…`.
 
 **Check (Step 7, Delta tables in all 3 layers):**
@@ -129,12 +130,19 @@ EXEC=$(aws stepfunctions start-execution --state-machine-arn $SM --query executi
 Expected after ~6 minutes (2 retries with back-off): status `FAILED` and an email
 "Calendly Insights: daily run failed" with the error.
 
-Fix it and reload: `cdk deploy` puts the correct settings back, then run again:
+Fix it and reload: put the correct setting back (the same value the stack defines), check CloudFormation agrees,
+then run again:
 ```bash
-cd infra && cdk deploy && cd ..
+aws lambda update-function-configuration --function-name $SPEND_FN \
+  --environment "Variables={LAKE_BUCKET=$LAKE,SPEND_BASE_URL=https://dea-data-bucket.s3.us-east-1.amazonaws.com/calendly_spend_data}"
+aws cloudformation detect-stack-drift --stack-name CalendlyInsights
 EXEC=$(aws stepfunctions start-execution --state-machine-arn $SM --query executionArn --output text)
 ```
+(`cdk deploy -c alert_email=<your email>` also restores it. Always pass the same `alert_email`: a `cdk deploy`
+without it removes the email subscription.)
+
 Expected: `SUCCEEDED`, and the Athena query above returns the same numbers as before (MERGE: no duplicates).
+Result 2026-11-19: failure → 2 retries → alert email at +6 min; re-run SUCCEEDED with identical spend and bookings.
 
 ## 7. Dashboard (Step 10)
 
@@ -164,8 +172,13 @@ aws s3 rb s3://$LAKE --force
 aws kms schedule-key-deletion --key-id alias/calendly-insights --pending-window-in-days 7
 ```
 
-## Known first-deploy risks (not testable without AWS)
-| What | Why it could fail | Fix |
+## First-deploy problems found and fixed (2026-11-19)
+| Symptom | Cause | Fix |
 |---|---|---|
-| Delta jars on EMR (`DELTA_JARS` in `stack.py`) | Path taken from the EMR docs for Delta on EMR; first run on `emr-spark-8.2.0` confirms it | If the driver log says `ClassNotFoundException ... delta`, check `/usr/share/aws/delta/lib/` names in the EMR release notes and update `DELTA_JARS` |
-| Athena `CREATE EXTERNAL TABLE ... ('table_type'='DELTA')` | Registration runs only after the first successful Spark run | The workflow retries; re-run once the Gold folders exist |
+| EMR job FAILED before starting: "initialExecutors: 3 must be between … maxExecutors 2" | EMR Serverless starts 3 executors by default; we capped at 2 | `spark.dynamicAllocation.initialExecutors=1` (PR #11) |
+| `ModuleNotFoundError: No module named 'delta'` | Delta's Python API is inside the Delta jar, which was not on Python's path | add `/usr/share/aws/delta/lib/delta-spark.jar` to `spark.submit.pyFiles` (PR #12) |
+| Dashboard showed $0 spend / $0.00 CPB for today | today's spend file is published tomorrow; nulls were summed as 0 | show "spend not published yet" (PR #13) |
+
+The Delta jar paths (`DELTA_JARS`) and the Athena Delta registration worked on the first try.
+Where to look when a run fails: the email names the step; Spark errors are in
+`aws emr-serverless list-job-runs --application-id <EmrApplicationId>` (stateDetails) and the driver `stderr.gz` under `emr-logs/`.
