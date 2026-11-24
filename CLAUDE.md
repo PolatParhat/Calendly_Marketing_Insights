@@ -68,4 +68,4 @@ Steps 4-12 create AWS resources: only after written SME approval (Step 2).
 | 9 | Warehouse: Glue Data Catalog + Athena over Gold | Athena returns CPB by channel | done (2026-11-19) |
 | 10 | Streamlit dashboard, 6 panels | runs locally on Athena data | done (2026-11-19) |
 | 11 | CI/CD complete: tests, lint, cdk synth on every PR | green checks on a real PR | done (2026-11-19) |
-| 12 | Submission: README, docs, configs, video, "why" per tool | doc's Step 6 list ticked | docs done; video to record |
+| 12 | Submission: README, docs, configs, video, "why" per tool | doc's Step 6 list ticked | done (video recorded 2026-11-23) |

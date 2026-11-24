@@ -55,6 +55,8 @@
 | 2026-11-19 | Dashboard: unknown spend shown as **"spend not published yet"**, never $0 (PR #13) | Today's spend file comes tomorrow 06:00; summing nulls as 0 showed free bookings |
 | 2026-11-19 | Webhook subscription created by the SME with scope organization and events `invitee.created` + `invitee.canceled`; canceled events are acknowledged (200) and not stored | Cancellations out of scope (SME 2026-11-16); 200 stops Calendly retrying them |
 | 2026-11-19 | Forced-failure test restores the Lambda setting with `update-function-configuration` + drift check instead of `cdk deploy` | Same result; a `cdk deploy` without `-c alert_email` would remove the email subscription |
+| 2026-11-23 | Walkthrough CPB query uses `date >= go-live AND spend_usd IS NOT NULL`; dashboard period go-live → last day with spend | Latest day has bookings but no spend yet; including it makes CPB look too low. Same numbers in Athena and dashboard |
+| 2026-11-23 | EMR job runs shown from the CLI (`list-job-runs`) in the video, not the console | The EMR Serverless console needs an EMR Studio; creating one adds a resource outside CDK |
 
 ## Change log
 - 2026-11-14: Project scaffold created; requirements PDF moved to docs/00_requirements/ with text copy and diagrams.
@@ -69,3 +71,5 @@
 - 2026-11-19: Step 3 done: Silver (bookings 4, booking_hosts 5, spend_daily 9), Gold 6 tables, pipeline.py run script, CI with Java 17 (32 tests). PR #8 merged (ca08946).
 - 2026-11-19: Steps 4-12 code written on branch build/steps-4-12: CDK stack, 3 Lambdas, data-quality checks, EMR entry point, Streamlit dashboard, CI cdk synth, runbook, final walkthrough video script. 64 tests pass locally; nothing deployed yet (user runs docs/03_deploy/runbook.md).
 - 2026-11-19: Deployed to AWS (us-west-1). Webhook live (SME created the subscription, signing key stored); spend copy 30 files; first two runs failed (EMR executors, delta import), fixed in PRs #11-#12; run SUCCEEDED (Bronze 2, Silver 3, Gold 6, Athena CPB); dashboard on Athena (PR #13 unknown spend); forced failure alerted and re-run gave identical numbers. Steps 4-11 done.
+- 2026-11-20: Dashboard 1.5 fix: weekday names match Silver (`Monday`, not `Mon`), test added (PR #16). First scheduled run 04:00 PT green.
+- 2026-11-23: Speaker notes rewritten to match live data (PRs #15-#18): CPB go-live → 2026-11-22 tiktok 124.38, youtube 147.30, facebook 360.05; dashboard 38 bookings, $6,765.74, $178.05. Daily scheduled runs 11-20..11-23 all SUCCEEDED. Final video recorded. **Step 12 done; project complete.**
