@@ -2,29 +2,26 @@
 Updated: 2026-11-23 by /handoff
 
 ## Where we are
-**Project complete. All Steps 0-12 done; final walkthrough video recorded 2026-11-23.**
-The stack `CalendlyInsights` is still deployed in us-west-1 and runs every day at 07:00 America/New_York
-(about $2/month). Whether to keep it or tear it down is the user's decision (see Next actions).
+**Project complete and torn down (2026-11-23).** All Steps 0-12 done; final video recorded.
+All AWS resources removed: stack `CalendlyInsights`, lake bucket, KMS key (PendingDeletion, gone 2026-11-30),
+helper log groups, `CDKToolkit` + its staging bucket. Total AWS cost of the pipeline ≈ $0.35 (Cost Explorer).
 
 ## Done this session (2026-11-19 → 2026-11-23)
-- PRs #15-#18 merged (main 5af759c): `scripts/open_recording_tabs.sh`; speaker notes checked line by line
-  against live AWS and rewritten (3-step booking flow, short EMR part, no clock times, self-updating CPB query).
-- PR #16 bug fix: dashboard 1.5 weekday names (`Monday`, not `Mon`); the time-slot table was empty. Test added.
-- Scheduled runs 2026-11-20, -21, -22, -23 all SUCCEEDED (no hand-started runs needed).
-- Verified 2026-11-23, go-live → 2026-11-22: CPB tiktok $124.38 (14), youtube $147.30 (17), facebook $360.05 (7);
-  dashboard 38 bookings, $6,765.74, $178.05 (matches Athena). 34 spend files; 3 alarms OK; drift IN_SYNC.
-- Final video recorded by the user.
+- PRs #15-#19 merged: recording-tab script, speaker notes checked against live AWS and rewritten, dashboard 1.5
+  weekday fix (PR #16), handoff.
+- Scheduled runs 2026-11-20..23 all SUCCEEDED. Verified go-live → 2026-11-22: CPB tiktok $124.38, youtube $147.30,
+  facebook $360.05; dashboard 38 bookings, $6,765.74, $178.05.
+- Final video recorded; teardown done by the user (runbook step 9 + CDKToolkit), final sweep of us-west-1 clean.
 
 ## Next actions
-1. Submit the project (repo link + video) as the bootcamp asks.
-2. Decide: keep the stack running (≈ $2/month, live data keeps coming) or tear it down with runbook step 9
-   (`docs/03_deploy/runbook.md`); the lake bucket and KMS key are retained and must be deleted by hand.
-3. Optional improvements: add a date column to gold.bookings_by_time_slot (filter 1.5 by period);
-   register Gold tables in parallel (each Athena DDL ≈ 1 min).
+1. Submit the project (repo link + video).
+2. Ask the SME to delete the Calendly webhook subscription (its URL no longer exists).
+3. To run it again: `cdk bootstrap` + runbook from step 1 (new webhook URL and signing key needed from the SME).
 
 ## Open items
 - SME approval message text still "_to paste_" in docs/01_sme/sme_questions.md (approval received 2026-11-18).
-- Not confirmed in chat whether the forced-failure alert email reached the inbox.
+- Not from this project, still in us-west-1 (user to decide): Databricks stack `databricks-workspace-stack-ed27b`,
+  unattached Elastic IP (~$3.60/month), RDS snapshot `database-1-snapshot`, 2 SQS queues.
 - User's practice files test.py and webhook_demo.py untracked in project root; do not commit them.
 
 ## Environment gotchas
